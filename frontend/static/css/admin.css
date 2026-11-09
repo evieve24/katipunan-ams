@@ -1,0 +1,74 @@
+/* Katipunan AMS - User administration page styles */
+:root{
+    --navy:#0d1b3e; --navy-2:#152449; --navy-3:#1e3a6e;
+    --gold:#c9a84c; --gold-light:#e8c96d; --gold-dim:#a07c2e;
+    --bg:#f8f5ee; --card:#fff; --line:#d4c9a8;
+    --text:#1a1a2e; --muted:#718096; --mid:#4a5568;
+    --green:#2d7d46; --green-bg:#ebf7ef; --red:#c0392b; --red-bg:#fdf0ee; --orange:#b7791f;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Source Sans 3',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+  .topbar{background:var(--navy);border-bottom:2px solid var(--gold-dim);padding:14px 24px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .topbar .seal{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.3rem;border:2px solid var(--gold);background:var(--navy-2)}
+  .topbar h1{font-family:'Playfair Display',serif;font-size:1.05rem;color:var(--gold);line-height:1.2}
+  .topbar .sub{font-size:.66rem;color:#8899bb;letter-spacing:.08em;text-transform:uppercase;margin-top:2px}
+  .topbar .spacer{flex:1}
+  .btn{display:inline-flex;align-items:center;gap:5px;border-radius:8px;padding:8px 13px;font-family:inherit;font-size:.75rem;font-weight:600;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--mid);transition:.18s;text-decoration:none}
+  .btn:hover{border-color:var(--gold-dim);color:var(--gold-dim)}
+  .btn.gold{background:linear-gradient(135deg,var(--gold),var(--gold-light));border:none;color:var(--navy)}
+  .btn.gold:hover{filter:brightness(1.05)}
+  .btn.danger{background:var(--red-bg);border-color:#e6b0a9;color:var(--red)}
+  .btn.danger:hover{background:var(--red);color:#fff}
+  .btn.small{padding:5px 9px;font-size:.68rem;border-radius:6px}
+  .btn:disabled{opacity:.55;cursor:wait}
+  .wrap{max-width:1180px;margin:0 auto;padding:24px}
+  .hero{background:linear-gradient(135deg,var(--navy),var(--navy-3));border-radius:14px;padding:24px 26px;color:#fff;margin-bottom:18px;position:relative;overflow:hidden}
+  .hero::after{content:'👥';position:absolute;right:22px;top:50%;transform:translateY(-50%);font-size:4rem;opacity:.12}
+  .hero h2{font-family:'Playfair Display',serif;color:var(--gold-light);font-size:1.35rem;margin-bottom:4px}
+  .hero p{font-size:.78rem;color:#a8b8d4}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  .stat .n{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:var(--navy)}
+  .stat .l{font-size:.7rem;color:var(--muted);margin-top:2px}
+  .grid{display:grid;grid-template-columns:1.5fr .9fr;gap:16px;align-items:start}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 4px 24px rgba(13,27,62,.08);overflow:hidden;margin-bottom:16px}
+  .card-head{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .card-head h3{font-family:'Playfair Display',serif;font-size:.98rem}
+  .card-body{padding:16px 18px}
+  .muted{color:var(--muted);font-size:.72rem}
+  table{width:100%;border-collapse:collapse}
+  th{text-align:left;font-size:.62rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);padding:9px 18px;background:#fbf9f4;border-bottom:1px solid var(--line);white-space:nowrap}
+  td{padding:10px 18px;font-size:.76rem;border-bottom:1px solid #eee7d8;vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  tbody tr:hover{background:#fcfaf5}
+  .pill{display:inline-block;font-size:.62rem;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap}
+  .pill.oic{background:#fdf3dc;color:#8a6415}
+  .pill.inspector{background:#ebf2ff;color:#2b5ca8}
+  .pill.gsostaff{background:var(--green-bg);color:var(--green)}
+  .pill.officehead{background:#f3ecff;color:#553c9a}
+  .pill.on{background:var(--green-bg);color:var(--green)}
+  .pill.off{background:var(--red-bg);color:var(--red)}
+  .row-actions{display:flex;gap:5px;flex-wrap:wrap}
+  label{display:block;font-size:.65rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+  input,select{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text);font-family:inherit;font-size:.8rem;outline:none}
+  input:focus,select:focus{border-color:var(--gold-dim);box-shadow:0 0 0 3px rgba(201,168,76,.12)}
+  .form-row{margin-bottom:11px}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .msg{min-height:18px;font-size:.72rem;margin-top:8px;line-height:1.4}
+  .msg.ok{color:var(--green)} .msg.err{color:var(--red)}
+  .audit-list{max-height:380px;overflow:auto;font-size:.7rem}
+  .audit-item{padding:8px 0;border-bottom:1px solid #eee7d8}
+  .audit-item:last-child{border-bottom:none}
+  .audit-item b{color:var(--text);font-weight:600}
+  .audit-meta{color:var(--muted);font-size:.63rem;margin-top:2px}
+  .empty{padding:26px;text-align:center;color:var(--muted);font-size:.75rem}
+  .toast{position:fixed;right:18px;bottom:18px;z-index:50;background:var(--navy);color:#e2e8f0;border:1px solid var(--gold-dim);border-radius:10px;padding:11px 16px;font-size:.76rem;box-shadow:0 12px 32px rgba(0,0,0,.3);opacity:0;transform:translateY(10px);transition:.25s;pointer-events:none;max-width:360px}
+  .toast.show{opacity:1;transform:translateY(0)}
+  .toast.err{border-color:var(--red);color:#ffb3ad}
+  .backup-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .denied{max-width:520px;margin:80px auto;text-align:center;background:#fff;border:1px solid var(--line);border-radius:14px;padding:36px;box-shadow:0 10px 40px rgba(13,27,62,.12)}
+  .denied h2{font-family:'Playfair Display',serif;color:var(--red);margin-bottom:8px}
+  input[type=file]{font-size:.72rem;padding:7px}
+  .hint{font-size:.66rem;color:var(--muted);margin-top:4px;line-height:1.5}
+  @media (max-width:900px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}}
+  @media (max-width:620px){.stats{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.wrap{padding:14px}}

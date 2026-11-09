@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0d1b3e">
+<title>User Administration · Katipunan Asset Management System</title>
+<link rel="icon" type="image/png" sizes="192x192" href="static/images/icons/icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Source+Sans+3:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="static/css/admin.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="seal">🏛️</div>
+  <div>
+    <h1>Katipunan Asset Management</h1>
+    <div class="sub">User Administration &amp; Server</div>
+  </div>
+  <div class="spacer"></div>
+  <a class="btn" href="index.html">← Open system</a>
+  <button class="btn danger" id="logoutBtn">Sign out</button>
+</header>
+
+<div class="wrap">
+  <div class="hero">
+    <h2>Accounts &amp; access control</h2>
+    <p id="heroUser">Checking session…</p>
+  </div>
+
+  <div class="stats" id="stats">
+    <div class="stat"><div class="n" id="statAssets">—</div><div class="l">Assets on server</div></div>
+    <div class="stat"><div class="n" id="statUsers">—</div><div class="l">User accounts</div></div>
+    <div class="stat"><div class="n" id="statDepartments">—</div><div class="l">Departments</div></div>
+    <div class="stat"><div class="n" id="statRepairs">—</div><div class="l">Repair records</div></div>
+  </div>
+
+  <div class="grid">
+    <div>
+      <div class="card">
+        <div class="card-head">
+          <h3>User accounts</h3>
+          <span class="muted" id="userCount">—</span>
+        </div>
+        <div style="overflow:auto">
+          <table>
+            <thead><tr><th>User</th><th>Role</th><th>Office</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="usersBody"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3>Server audit log</h3><button class="btn small" id="refreshAudit">Refresh</button></div>
+        <div class="card-body audit-list" id="auditList"><div class="empty">Loading…</div></div>
+      </div>
+    </div>
+
+    <aside>
+      <div class="card">
+        <div class="card-head"><h3>Create account</h3></div>
+        <div class="card-body">
+          <form id="createForm">
+            <div class="form-row"><label for="cName">Full name</label><input id="cName" placeholder="e.g. Juan Dela Cruz" required></div>
+            <div class="form-row"><label for="cUser">Username</label><input id="cUser" placeholder="e.g. juan.delacruz" autocomplete="off" required></div>
+            <div class="form-row"><label for="cPass">Temporary password</label><input id="cPass" type="password" placeholder="At least 8 characters" required></div>
+            <div class="form-row"><label for="cRole">Role</label>
+              <select id="cRole">
+                <option value="oic">GSO-OIC (administrator)</option>
+                <option value="inspector">Inspectorate Personnel</option>
+                <option value="gsostaff" selected>GSO Office Personnel</option>
+                <option value="officehead">Municipal Office Head</option>
+              </select>
+            </div>
+            <div class="form-row" id="officeRow" style="display:none"><label for="cOffice">Office</label>
+              <select id="cOffice">
+                <option value="mayors">Mayor's Office</option>
+                <option value="budget">Budget Office</option>
+                <option value="mpc">Municipal Planning &amp; Development Office</option>
+                <option value="accounting">Accounting Office</option>
+                <option value="treasury">Treasurer's Office</option>
+                <option value="engineering">Engineering Office</option>
+                <option value="assessor">Assessor's Office</option>
+                <option value="civilreg">Civil Registrar</option>
+                <option value="rhu">Rural Health Unit (RHU)</option>
+                <option value="bfp">Bureau of Fire Protection</option>
+                <option value="pnp">PNP Office</option>
+                <option value="motorpool">Motorpool</option>
+                <option value="ldrrmo">LDRRMO</option>
+                <option value="dswd">DSWD</option>
+                <option value="mswd">MSWD</option>
+                <option value="seniors">Senior Citizens Office</option>
+                <option value="owwa">OWWA</option>
+                <option value="water">Water System</option>
+                <option value="market">Market Office</option>
+                <option value="gso" selected>General Services Office</option>
+              </select>
+            </div>
+            <button class="btn gold" type="submit" id="createBtn" style="width:100%;justify-content:center">Create account</button>
+            <div class="msg" id="createMsg"></div>
+          </form>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3>Backup &amp; restore</h3></div>
+        <div class="card-body">
+          <div class="backup-row">
+            <button class="btn" id="exportBtn">Download backup</button>
+            <label class="btn" for="importFile" style="margin:0">Choose file</label>
+            <input id="importFile" type="file" accept="application/json,.json" style="display:none">
+          </div>
+          <div class="hint">Backups contain all assets, repairs, transfers, borrow slips, photos, activity, and settings stored on the server.</div>
+          <div class="msg" id="backupMsg"></div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="static/js/admin.js"></script>
+</body>
+</html>

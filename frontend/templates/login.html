@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0d1b3e">
+<title>Sign in · Katipunan Asset Management System</title>
+<link rel="icon" type="image/png" sizes="192x192" href="static/images/icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Source+Sans+3:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="static/css/login.css">
+</head>
+<body>
+<div class="shell">
+  <section class="brand">
+    <div>
+      <div class="seal">🏛️</div>
+      <div class="kicker">Local Government Unit of</div>
+      <h1>Katipunan <span>Asset Management</span></h1>
+      <p>QR code-based asset tracking, accountability records, and procurement forecasting for the Municipality of Katipunan, Zamboanga del Norte.</p>
+      <div class="chips">
+        <span class="chip">QR tracking</span>
+        <span class="chip">Procurement forecast</span>
+        <span class="chip">Life cycle</span>
+        <span class="chip">Role-based access</span>
+      </div>
+    </div>
+    <div class="brand-foot">
+      <b>Central database:</b> all records are saved to the LGU server.<br>
+      Version 1.1 · Backend enabled
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Sign in</h2>
+    <div class="sub">Use your LGU account to continue</div>
+
+    <div class="notice" id="notice"></div>
+
+    <form id="loginForm" autocomplete="on">
+      <div class="field">
+        <label for="username">Username</label>
+        <input id="username" name="username" type="text" placeholder="Username" autocomplete="username" required>
+      </div>
+      <div class="field pw-wrap">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" placeholder="Enter your password" autocomplete="current-password" required>
+        <button type="button" class="pw-toggle" id="pwToggle">Show</button>
+      </div>
+      <div class="error" id="error"></div>
+      <button class="submit" id="submitBtn" type="submit">Sign in to the system</button>
+    </form>
+
+    <div class="meta">
+      <span class="status"><span class="status-dot" id="serverDot"></span><span id="serverText">Checking server…</span></span>
+      <a href="admin.html">User administration</a>
+    </div>
+
+    <details class="demo">
+      <summary>Demo accounts (change these before deployment)</summary>
+      <div class="demo-grid">
+        <div class="demo-account" data-u="admin" data-p="Katipunan@2026"><b>GSO-OIC Administrator</b><span>admin / Katipunan@2026</span></div>
+        <div class="demo-account" data-u="inspector" data-p="Inspector@2026"><b>Inspectorate Personnel</b><span>inspector / Inspector@2026</span></div>
+        <div class="demo-account" data-u="gsostaff" data-p="GSOStaff@2026"><b>GSO Office Personnel</b><span>gsostaff / GSOStaff@2026</span></div>
+        <div class="demo-account" data-u="officehead" data-p="OfficeHead@2026"><b>Municipal Office Head</b><span>officehead / OfficeHead@2026</span></div>
+      </div>
+    </details>
+
+    <div class="foot">
+      Accounts are managed by the GSO-OIC. If you are locked out, ask the administrator to reset your password from the user administration page.
+    </div>
+  </section>
+</div>
+
+<script src="static/js/login.js"></script>
+</body>
+</html>

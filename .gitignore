@@ -1,0 +1,68 @@
+# ============================================================
+# Katipunan Asset Management System - .gitignore
+# ============================================================
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+build/
+dist/
+*.egg-info/
+.venv/
+venv/
+env/
+ENV/
+
+# Database (keep the folder, ignore the live data)
+backend/data/*
+!backend/data/.gitkeep
+
+# Log files (keep the folder, ignore the contents)
+logs/*
+!logs/.gitkeep
+
+# Media uploads (keep the folder, ignore user files)
+media/uploads/*
+!media/uploads/.gitkeep
+
+# Node / frontend tooling
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# IDEs & editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# OS generated
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Backup / temporary files
+*.bak
+*.tmp
+*.orig
+*.rej

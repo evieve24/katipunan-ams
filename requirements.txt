@@ -1,0 +1,11 @@
+# ============================================================
+# Katipunan Asset Management System - Python dependencies
+# ============================================================
+# Python 3.10 or newer is required.
+#
+#   python -m pip install -r requirements.txt
+#
+# The backend serves the app with the Python standard library
+# (http.server) and talks to XAMPP's MariaDB/MySQL through PyMySQL.
+
+PyMySQL>=1.1

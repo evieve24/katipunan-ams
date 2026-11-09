@@ -1,0 +1,95 @@
+/* Katipunan AMS - Login page styles */
+:root{
+    --navy:#0d1b3e; --navy-2:#152449; --navy-3:#1e3a6e;
+    --gold:#c9a84c; --gold-light:#e8c96d; --gold-dim:#a07c2e;
+    --text:#e2e8f0; --muted:#8899bb; --line:rgba(201,168,76,.28);
+    --red:#ff8a80; --green:#6ee7a0;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+    font-family:'Source Sans 3',system-ui,sans-serif;color:var(--text);
+    background:radial-gradient(1200px 600px at 20% 0%,#1b2f5e 0%,transparent 60%),
+               radial-gradient(900px 500px at 100% 100%,#23386e 0%,transparent 55%),
+               linear-gradient(150deg,#0a1329 0%,#0d1b3e 50%,#0a1628 100%);
+    overflow-x:hidden;
+  }
+  body::before{
+    content:'';position:fixed;inset:0;pointer-events:none;opacity:.35;
+    background-image:linear-gradient(rgba(201,168,76,.05) 1px,transparent 1px),
+                     linear-gradient(90deg,rgba(201,168,76,.05) 1px,transparent 1px);
+    background-size:64px 64px;
+  }
+  .shell{position:relative;width:100%;max-width:920px;display:grid;grid-template-columns:1.1fr .9fr;gap:0;
+    border:1px solid rgba(201,168,76,.25);border-radius:22px;overflow:hidden;
+    box-shadow:0 40px 120px rgba(0,0,0,.55);background:rgba(10,20,42,.55);backdrop-filter:blur(14px);}
+  .brand{padding:42px 40px;display:flex;flex-direction:column;justify-content:space-between;
+    background:linear-gradient(150deg,rgba(21,36,73,.9),rgba(13,27,62,.55));border-right:1px solid rgba(201,168,76,.18);}
+  .seal{width:70px;height:70px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-size:2rem;background:linear-gradient(135deg,var(--navy-3),var(--navy));
+    border:2px solid var(--gold);box-shadow:0 0 0 6px rgba(201,168,76,.08),0 12px 30px rgba(0,0,0,.35);}
+  .brand h1{font-family:'Playfair Display',serif;font-size:1.5rem;line-height:1.25;color:#fff;margin-top:22px;}
+  .brand h1 span{color:var(--gold-light)}
+  .brand .kicker{font-size:.68rem;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);margin-top:18px;}
+  .brand p{font-size:.82rem;line-height:1.65;color:var(--muted);margin-top:12px;max-width:34ch;}
+  .brand-foot{font-size:.68rem;color:#5a7099;letter-spacing:.05em;margin-top:34px;line-height:1.7}
+  .brand-foot b{color:#8fa3c7;font-weight:600}
+  .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:18px}
+  .chip{font-size:.66rem;color:#c8d5ec;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);
+    border-radius:20px;padding:4px 10px}
+  .panel{padding:42px 38px;background:rgba(13,27,62,.72);display:flex;flex-direction:column;justify-content:center;}
+  .panel h2{font-family:'Playfair Display',serif;font-size:1.35rem;color:#fff}
+  .panel .sub{font-size:.75rem;color:var(--muted);margin-top:5px;margin-bottom:26px;letter-spacing:.04em}
+  label{display:block;font-size:.68rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+    color:#93a4c4;margin-bottom:7px}
+  .field{position:relative;margin-bottom:16px}
+  input[type=text],input[type=password]{
+    width:100%;padding:13px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.14);
+    background:rgba(6,14,30,.65);color:#fff;font-family:inherit;font-size:.9rem;outline:none;transition:.18s;
+  }
+  input::placeholder{color:#5a6c8e}
+  input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,168,76,.12)}
+  .pw-wrap input{padding-right:66px}
+  .pw-toggle{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:1px solid rgba(201,168,76,.3);
+    background:rgba(201,168,76,.1);color:var(--gold-light);font-family:inherit;font-size:.66rem;font-weight:700;
+    letter-spacing:.04em;border-radius:7px;padding:5px 9px;cursor:pointer}
+  .pw-toggle:hover{background:rgba(201,168,76,.2)}
+  .error{min-height:18px;font-size:.74rem;color:var(--red);margin-bottom:6px;line-height:1.4}
+  .notice{font-size:.74rem;color:var(--gold-light);background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.25);
+    border-radius:9px;padding:10px 12px;margin-bottom:14px;line-height:1.5;display:none}
+  .notice.show{display:block}
+  .submit{width:100%;padding:13px;border:none;border-radius:10px;cursor:pointer;
+    background:linear-gradient(135deg,var(--gold),var(--gold-light));color:#0d1b3e;
+    font-family:inherit;font-size:.86rem;font-weight:700;letter-spacing:.03em;transition:.18s;
+    box-shadow:0 10px 28px rgba(201,168,76,.28)}
+  .submit:hover{transform:translateY(-1px);box-shadow:0 14px 34px rgba(201,168,76,.38)}
+  .submit:active{transform:translateY(0)}
+  .submit:disabled{opacity:.6;cursor:wait;transform:none}
+  .meta{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:18px;font-size:.7rem;color:#6a7c9c}
+  .status{display:inline-flex;align-items:center;gap:6px}
+  .status-dot{width:7px;height:7px;border-radius:50%;background:#8899bb}
+  .status-dot.ok{background:var(--green);box-shadow:0 0 8px rgba(110,231,160,.6)}
+  .status-dot.bad{background:var(--red)}
+  a{color:#9db4dd;text-decoration:none}
+  a:hover{color:var(--gold-light)}
+  details.demo{margin-top:20px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px}
+  details.demo summary{cursor:pointer;font-size:.7rem;color:#8fa3c7;letter-spacing:.05em;list-style:none}
+  details.demo summary::-webkit-details-marker{display:none}
+  details.demo summary::before{content:'▸ ';color:var(--gold)}
+  details.demo[open] summary::before{content:'▾ '}
+  .demo-grid{display:grid;gap:6px;margin-top:10px}
+  .demo-account{display:flex;align-items:center;justify-content:space-between;gap:10px;
+    font-size:.7rem;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+    border-radius:8px;padding:7px 10px;cursor:pointer;transition:.15s}
+  .demo-account:hover{border-color:var(--gold-dim);background:rgba(201,168,76,.08)}
+  .demo-account b{color:#cdd8ea;font-weight:600}
+  .demo-account span{color:#6a7c9c;font-family:ui-monospace,monospace;font-size:.66rem}
+  .foot{margin-top:16px;font-size:.66rem;color:#516383;line-height:1.6}
+  @media (max-width:760px){
+    .shell{grid-template-columns:1fr}
+    .brand{padding:28px 26px;border-right:none;border-bottom:1px solid rgba(201,168,76,.18)}
+    .brand p,.brand-foot,.chips{display:none}
+    .brand h1{font-size:1.15rem;margin-top:14px}
+    .seal{width:52px;height:52px;font-size:1.4rem}
+    .panel{padding:28px 24px}
+  }
