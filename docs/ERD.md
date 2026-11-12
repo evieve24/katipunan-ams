@@ -170,6 +170,9 @@ history with coordinates and the user who performed the scan. `asset_scan`
 adds that history with foreign keys to `assets` and `users`; the client
 generates the `scan_id`, so retries and offline synchronization are idempotent.
 
+The implemented DFD, including data stores D0–D14 and DFD-named SQL views, is in
+[`DFD_MAPPING.md`](DFD_MAPPING.md).
+
 ## Relationship implementation
 
 - `assets.user_id` → `users.id`, `ON DELETE SET NULL` (history survives when an account is removed).
