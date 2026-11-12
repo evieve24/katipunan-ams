@@ -1605,8 +1605,8 @@
     <div class="modal-title">➕ Add Equipment</div>
     <div class="modal-sub" id="addEqStaffName">Adding equipment for staff</div>
     <div class="modal-form-grid">
-      <div class="modal-form-row"><label>Item ID</label><input id="addEqId" placeholder="e.g. HR-EQ10"></div>
-      <div class="modal-form-row"><label>Equipment</label><input id="addEqName" placeholder="e.g. Desktop Computer"></div>
+      <div class="modal-form-row"><label>Item ID</label><input id="addEqId" placeholder="Auto (e.g. LAP-0001)" oninput="markAddEqIdManual()"><div style="font-size:0.63rem;color:var(--text-light);margin-top:3px">Auto-generated from the equipment type; you can edit it.</div></div>
+      <div class="modal-form-row"><label>Equipment</label><input id="addEqName" placeholder="e.g. Desktop Computer" oninput="autoFillAddEqId()"></div>
       <div class="modal-form-row"><label>Description</label><input id="addEqDesc" placeholder="Short description of the asset"></div>
       <div class="modal-form-row"><label>Brand/Model</label><input id="addEqBrand" placeholder="e.g. Dell OptiPlex"></div>
       <div class="modal-form-row"><label>Serial No.</label><input id="addEqSerial" placeholder="Serial No."></div>

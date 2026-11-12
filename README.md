@@ -196,6 +196,10 @@ Default Project/
 - When adding equipment from a personnel profile, the **Location** field
   defaults automatically to that person's office. It can still be changed
   manually before saving.
+- New equipment IDs are generated automatically from the equipment type using
+  short codes: `LAP-0001`, `PRN-0001`, `DSK-0001`, `CHR-0001`, etc. The
+  sequence is per type and unique across all offices. The field remains
+  editable, and duplicate IDs are rejected.
 - On sign-in the browser **hydrates** from the server; after that every change
   is written through to the server (debounced auto-save).
 - Device-only secrets (`mets_pin`, `mets_password`, `mets_username`,

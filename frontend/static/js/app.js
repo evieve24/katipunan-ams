@@ -2956,6 +2956,56 @@ function populateLocationSelect(selectId, selected){
   sel.value=unique.includes(value)?value:'Not Set';
 }
 
+const ASSET_ID_PREFIXES={
+  'Laptop':'LAP','Desktop':'DSK','Printer':'PRN','Scanner':'SCN','Photocopier':'CPY',
+  'Chair':'CHR','Table / Desk':'TBL','Cabinet / Shelving':'CAB','Air Conditioner':'AIR',
+  'Electric Fan':'FAN','Projector':'PJR','Monitor':'MON','Keyboard':'KBD','Mouse':'MSE',
+  'UPS':'UPS','Network Equipment':'NET','Telephone':'TEL','Radio':'RAD','Calculator':'CAL',
+  'Typewriter':'TYP','Refrigerator':'REF','Television':'TV','Camera / CCTV':'CAM',
+  'Fire Extinguisher':'FEX','Generator Set':'GSET','Vehicle':'VEH','Water Dispenser':'WTR',
+  'PA / Sound System':'PAS'
+};
+function assetIdPrefixForName(name){
+  const info=assetTypeInfo({name:name||''});
+  return ASSET_ID_PREFIXES[info.label]||'GEN';
+}
+function allExistingAssetIds(){
+  const used=new Set();
+  const add=id=>{const value=String(id||'').toUpperCase();if(value)used.add(value);};
+  for(const list of Object.values(staffData)){
+    if(!Array.isArray(list))continue;
+    for(const staff of list){
+      (staff.equipment||[]).forEach(eq=>add(eq.id));
+    }
+  }
+  try{(typeof recycleBin!=='undefined'?recycleBin:[]).forEach(eq=>add(eq.id));}catch(e){}
+  return used;
+}
+function nextAssetIdForType(name){
+  const prefix=assetIdPrefixForName(name);
+  const used=allExistingAssetIds();
+  const re=new RegExp('^'+prefix+'-(?:\\d{2}-)?(\\d+)$');
+  let max=0;
+  used.forEach(id=>{const m=id.match(re);if(m)max=Math.max(max,parseInt(m[1],10));});
+  let n=max+1,candidate;
+  do{candidate=prefix+'-'+String(n).padStart(4,'0');n++;}while(used.has(candidate));
+  return candidate;
+}
+function autoFillAddEqId(){
+  const idEl=document.getElementById('addEqId');
+  const nameEl=document.getElementById('addEqName');
+  if(!idEl||!nameEl)return;
+  if(idEl.dataset.auto==='0')return;
+  const name=nameEl.value.trim();
+  if(!name){idEl.value='';idEl.dataset.auto='1';return;}
+  idEl.value=nextAssetIdForType(name);
+  idEl.dataset.auto='1';
+}
+function markAddEqIdManual(){
+  const idEl=document.getElementById('addEqId');
+  if(idEl)idEl.dataset.auto='0';
+}
+
 function openAddEquipmentModal(staffId){
   addEqTargetStaffId=staffId;
   let staffName='',staffDeptId='';
@@ -2966,6 +3016,8 @@ function openAddEquipmentModal(staffId){
   }
   document.getElementById('addEqStaffName').textContent=`Adding equipment for: ${staffName}`;
   ['addEqId','addEqName','addEqBrand','addEqSerial','addEqAcquired','addEqLife','addEqAmount','addEqCalibration','addEqExpiration','addEqRemarks'].forEach(id=>{document.getElementById(id).value='';})
+  const addIdEl=document.getElementById('addEqId');
+  if(addIdEl)addIdEl.dataset.auto='1';
   document.getElementById('addEqStatus').value='Serviceable';
   const defaultLocation=officeNameForDept(staffDeptId)||officeNameForDept(currentDeptId)||'Not Set';
   populateLocationSelect('addEqLocation',defaultLocation);
@@ -2978,9 +3030,19 @@ function openAddEquipmentModal(staffId){
 }
 
 function saveAddEquipment(){
-  const id=document.getElementById('addEqId').value.trim();
+  const idEl=document.getElementById('addEqId');
   const name=document.getElementById('addEqName').value.trim();
-  if(!id||!name){alert('Item ID and Equipment Name are required.');return;}
+  if(!name){alert('Equipment Name is required.');return;}
+  let id=idEl.value.trim();
+  if(!id||idEl.dataset.auto==='1'){
+    id=nextAssetIdForType(name);
+    idEl.value=id;
+  }
+  if(!id){alert('Item ID is required.');return;}
+  if(allExistingAssetIds().has(id.toUpperCase())){
+    alert('Item ID already exists. Please use a different ID.');
+    return;
+  }
   const newEq={
     id,name,
     description:(document.getElementById('addEqDesc')||{}).value||'',
