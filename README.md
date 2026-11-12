@@ -193,6 +193,9 @@ Default Project/
   example staff or demo equipment. Office groups, offices, and their sections
   remain defined; add each person and their accountable equipment through the
   normal **Add Personnel** / **Add Equipment** screens.
+- When adding equipment from a personnel profile, the **Location** field
+  defaults automatically to that person's office. It can still be changed
+  manually before saving.
 - On sign-in the browser **hydrates** from the server; after that every change
   is written through to the server (debounced auto-save).
 - Device-only secrets (`mets_pin`, `mets_password`, `mets_username`,

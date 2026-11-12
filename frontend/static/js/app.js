@@ -2935,18 +2935,40 @@ function emptyRecycleBin(){
 // ══════════════════════════════════════════════════════════
 let addEqTargetStaffId=null;
 
+function officeNameForDept(deptId){
+  if(!deptId)return '';
+  if((window.adminOfficeDepts||[]).some(d=>d.id===deptId))return 'Admin Office';
+  for(const office of Object.values(officeData)){
+    if((office.depts||[]).some(d=>d.id===deptId))return office.name;
+  }
+  return '';
+}
+function populateLocationSelect(selectId, selected){
+  const sel=document.getElementById(selectId);
+  if(!sel)return;
+  const names=['Not Set','Admin Office'];
+  Object.values(officeData).forEach(office=>{if(office&&office.name)names.push(office.name);});
+  const unique=[];
+  names.forEach(name=>{if(name&&!unique.includes(name))unique.push(name);});
+  const value=selected||'Not Set';
+  if(!unique.includes(value))unique.push(value);
+  sel.innerHTML=unique.map(name=>`<option value="${dashEsc(name)}">${dashEsc(name)}</option>`).join('');
+  sel.value=unique.includes(value)?value:'Not Set';
+}
+
 function openAddEquipmentModal(staffId){
   addEqTargetStaffId=staffId;
-  let staffName='';
-  for(const list of Object.values(staffData)){
+  let staffName='',staffDeptId='';
+  for(const[deptId,list]of Object.entries(staffData)){
     if(!Array.isArray(list))continue;
     const s=list.find(x=>x.id===staffId);
-    if(s){staffName=s.name;break;}
+    if(s){staffName=s.name;staffDeptId=deptId;break;}
   }
   document.getElementById('addEqStaffName').textContent=`Adding equipment for: ${staffName}`;
   ['addEqId','addEqName','addEqBrand','addEqSerial','addEqAcquired','addEqLife','addEqAmount','addEqCalibration','addEqExpiration','addEqRemarks'].forEach(id=>{document.getElementById(id).value='';})
   document.getElementById('addEqStatus').value='Serviceable';
-  document.getElementById('addEqLocation').value='Not Set';
+  const defaultLocation=officeNameForDept(staffDeptId)||officeNameForDept(currentDeptId)||'Not Set';
+  populateLocationSelect('addEqLocation',defaultLocation);
   // Reset category display
   const addCatH=document.getElementById('addEqCategory');
   const addCatD=document.getElementById('addEqCategoryDisplay');
@@ -3009,7 +3031,7 @@ function openEditEquipmentModal(staffId,eqId){
   document.getElementById('editEqSerial').value=eq.serial;
   document.getElementById('editEqStatus').value=eq.status;
   document.getElementById('editEqCategory').value=eq.category||'Semi-Expendable';
-  document.getElementById('editEqLocation').value=eq.location||'Not Set';
+  populateLocationSelect('editEqLocation',eq.location||'Not Set');
   document.getElementById('editEqAcquired').value=eq.acquiredDate||'';
   document.getElementById('editEqLife').value=eq.usefulLife||'';
   const rawAmt=eq.amount?String(eq.amount).replace(/[₱,]/g,''):'';
