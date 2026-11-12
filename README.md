@@ -244,9 +244,9 @@ Default Project/
 ### Camera controls, scan history, and offline queue
 
 - The **Mobile Scanner** starts the camera automatically after an office is
-  selected. It provides a camera selector, **Close**, **Upload QR image**, and
-  **Demo scan**; Start, Stop, and Scan Again were removed. After detection, tap
-  **View Asset Details** to open the asset.
+  selected. The mobile scanner itself has no Start, Stop, Scan Again, camera
+  selector, upload, demo, or Close-row controls; use the topbar **✕** to exit.
+  After detection, tap **View Asset Details** to open the asset.
 - The **desktop QR modal** provides a camera selector, **Start**, **Stop**, and
   **Scan Again**.
 - The scanner is tuned for speed: QR-only decoding, native
@@ -256,7 +256,7 @@ Default Project/
   hamburger button, stacked statistics/settings grids, horizontally scrollable
   tables, full-screen mobile scanner, and 94vw modals.
 - Phones and tablets prefer the rear camera (`facingMode: environment`); laptops
-  and desktops can select any connected webcam/USB camera.
+  and desktops use the available webcam/USB camera.
 - After a scan, the result screen shows the **registered location** and
   **registered coordinates**, the **actual scanned coordinates**, GPS accuracy,
   scan time, a distance check, a **map preview**, **View on Map** and

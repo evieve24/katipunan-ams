@@ -1069,7 +1069,7 @@ async function loadCameraSelectors(){
     const cams=await Html5Qrcode.getCameras();
     window._availableCameras=cams||[];
     const saved=(()=>{try{return localStorage.getItem('mets_camera_id')||'';}catch(e){return'';}})();
-    ['qrCameraSel','msCameraSel'].forEach(id=>{
+    ['qrCameraSel'].forEach(id=>{
       const sel=document.getElementById(id);if(!sel)return;
       const current=sel.value||saved;
       sel.innerHTML='<option value="">Auto (default / rear camera)</option>'+cams.map((c,i)=>{
@@ -1096,11 +1096,6 @@ function stopQRScannerCamera(){
   const actions=document.getElementById('qrScanActions');if(actions)actions.style.display='none';
   const err=document.getElementById('qrScanError');
   if(err){err.style.display='block';err.textContent='Scanner stopped — press ▶ Start to resume.';}
-}
-function restartMobileCamera(deviceId){
-  if(deviceId){try{localStorage.setItem('mets_camera_id',deviceId);}catch(e){}}
-  stopMobileQRScan();
-  startMobileQRScan(deviceId);
 }
 
 
@@ -4883,16 +4878,10 @@ async function startMobileQRScan(deviceId) {
   box.classList.add('live', 'ready');
   const hint = document.getElementById('scanHintText');
   if (hint) hint.textContent = 'Requesting camera…';
-  if (deviceId) {
-    try {
-      const select = document.getElementById('msCameraSel');
-      if (select) select.value = deviceId;
-    } catch (e) {}
-  }
   await loadCameraSelectors();
   msInlineScanBusy = false;
   let lastError = null;
-  for (const cfg of qrCameraCandidates('msCameraSel')) {
+  for (const cfg of qrCameraCandidates('')) {
     if (!document.getElementById('view-mobilescanner')?.classList.contains('active')) return null;
     reader.innerHTML = '';
     const scanner = createQrScanner('msInlineReader');
@@ -4931,79 +4920,6 @@ async function startMobileQRScan(deviceId) {
   ms_showToast('📷 ' + message);
   logAction('Camera scan unavailable: ' + (lastError && lastError.message ? lastError.message : lastError));
   return null;
-}
-
-function msChooseQRImage() {
-  const input = document.getElementById('msQRFileInput');
-  if (input) input.click();
-}
-
-async function msScanQRFile(file) {
-  if (!file) return;
-  stopMobileQRScan();
-  if (typeof Html5Qrcode === 'undefined') {
-    ms_showToast('QR scanner library not loaded');
-    return;
-  }
-  let holder = document.getElementById('msQRFileReader');
-  if (!holder) {
-    holder = document.createElement('div');
-    holder.id = 'msQRFileReader';
-    holder.style.display = 'none';
-    document.body.appendChild(holder);
-  }
-  const scanner = createQrScanner('msQRFileReader');
-  try {
-    const text = await scanner.scanFile(file, true);
-    scanner.clear();
-    onQRDecoded(text);
-  } catch (e) {
-    try { scanner.clear(); } catch (_) {}
-    ms_showToast('No QR code found in that image');
-  }
-}
-
-/* ── DEMO TAP-TO-SCAN ── */
-function simulateDemoScan() {
-  if (!selectedOffice) {
-    ms_showToast('📍 Please select an office first');
-    return;
-  }
-  // Flash the scanner area green on "scan"
-  const area = document.getElementById('scannerAreaBox');
-  if (area) {
-    area.style.borderColor = 'rgba(93,202,165,0.8)';
-    area.style.boxShadow = '0 0 0 3px rgba(93,202,165,0.25),0 0 50px rgba(93,202,165,0.3)';
-    setTimeout(() => {
-      area.style.borderColor = '';
-      area.style.boxShadow = '';
-    }, 600);
-  }
-  // Prefer the real inventory so demo scans show actual assets.
-  const real=[];
-  for(const [dept,people] of Object.entries(staffData)){
-    if(!Array.isArray(people))continue;
-    for(const person of people){
-      for(const eq of (person.equipment||[])){
-        real.push({id:eq.id,name:eq.name,serial:eq.serial,owner:person.name,brand:eq.brand,status:eq.status,location:eq.location,acquiredDate:eq.acquiredDate,amount:eq.amount});
-      }
-    }
-  }
-  const pool=real.length?real:ALL_ASSETS.map(a=>({...a,acquiredDate:a.acq}));
-  const randomAsset=pool[Math.floor(Math.random()*pool.length)];
-  const fakeQR=JSON.stringify({
-    id: randomAsset.id,
-    name: randomAsset.name,
-    serial: randomAsset.serial,
-    owner: randomAsset.owner,
-    brand: randomAsset.brand,
-    status: randomAsset.status,
-    location: randomAsset.location,
-    acquiredDate: randomAsset.acquiredDate,
-    amount: String(randomAsset.amount||''),
-    lgu: 'LGU Katipunan'
-  });
-  onQRDecoded(fakeQR);
 }
 
 /* ── QR DECODE ── */

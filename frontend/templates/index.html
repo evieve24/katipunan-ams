@@ -1002,12 +1002,6 @@
 
         <!-- hint text only, no header block -->
         <div class="sc-hint-only" id="scanHintText">Point camera at asset QR code tag</div>
-        <div class="camera-select-row">
-          <span class="camera-select-label">Camera</span>
-          <select id="msCameraSel" class="camera-select" onchange="restartMobileCamera(this.value)">
-            <option value="">Auto (rear camera on mobile)</option>
-          </select>
-        </div>
 
         <!-- ④ Scanner viewport -->
         <div class="sc-viewport">
@@ -1042,15 +1036,6 @@
             <div class="scanner-tap-hint" id="scannerTapHint"><i class="ti ti-camera" style="font-size:13px;"></i> Tap to scan with camera</div>
           </div>
         </div>
-        <div style="display:flex;justify-content:center;gap:16px;padding:0 14px 8px;font-size:10px;color:#8899bb;">
-          <span style="cursor:pointer" onclick="msChooseQRImage()">🖼️ Upload QR image</span>
-          <span style="cursor:pointer" onclick="simulateDemoScan()">No camera? Demo scan</span>
-        </div>
-        <div class="scanner-controls">
-          <button type="button" class="scanner-ctrl-btn close" onclick="closeMobileScanner()">✕ Close</button>
-        </div>
-        <input type="file" id="msQRFileInput" accept="image/*" style="display:none" onchange="msScanQRFile(this.files && this.files[0]); this.value='';">
-        <div id="msQRFileReader" style="display:none;"></div>
 
         <!-- hidden office-dd kept for JS compatibility -->
         <div style="display:none;">
