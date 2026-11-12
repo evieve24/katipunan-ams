@@ -3001,10 +3001,6 @@ function autoFillAddEqId(){
   idEl.value=nextAssetIdForType(name);
   idEl.dataset.auto='1';
 }
-function markAddEqIdManual(){
-  const idEl=document.getElementById('addEqId');
-  if(idEl)idEl.dataset.auto='0';
-}
 
 function openAddEquipmentModal(staffId){
   addEqTargetStaffId=staffId;
