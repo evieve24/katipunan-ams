@@ -170,7 +170,7 @@ Default Project/
 | `docs/DFD_MAPPING.md` | Implemented DFD: actors, processes 1.0–14.0, data stores D1–D14, and physical-table mapping. |
 | `docs/DFD_DIAGRAM.md` | Visual updated DFD: core D1–D11 plus the D12–D14 final-system extensions. |
 | `docs/SCANNER_GEOLOCATION.md` | Scanner, camera selection, GPS, maps, PWA offline queue, database, and testing details. |
-| `docs/dfd_views.sql` | Read-only views named after the DFD data stores (`D1_User_Data` … `D14_Sync_Data`). |
+| `docs/dfd_views.sql` | Read-only views named after the DFD data stores (`D1 User Data` … `D14 Sync Data`). |
 | `docs/katipunan_ams_install.sql` | Complete installation script: creates `katipunan_ams`, all 17 tables, and the DFD views; safe to re-run. |
 | `docs/katipunan_ams_schema.sql` | Generated DDL for the live schema (tables, keys, foreign keys). |
 | `pyproject.toml` | Black/Ruff configuration for the Python backend. |
@@ -401,11 +401,17 @@ Processes 4.1, 12.0, 13.0, and 14.0.
 The physical tables keep their names. Fourteen read-only views expose the same
 data under the DFD store names:
 
-`D1_User_Data`, `D2_Asset_Data`, `D3_Borrow_Data`,
-`D4_Inventory_Data`, `D5_Asset_Transfer_Data`, `D6_Asset_Life_Cycle_Data`,
-`D7_Forecasting_Data`, `D8_Maintenance_Data`, `D9_Report_Data`,
-`D10_Activity_Logs_Data`, `D11_Backup_Data`, `D12_Scan_Location_Data`,
-`D13_Notification_Data`, `D14_Sync_Data`.
+`D1 User Data`, `D2 Asset Data`, `D3 Borrow Data`,
+`D4 Inventory Data`, `D5 Asset Transfer Data`, `D6 Asset Life Cycle Data`,
+`D7 Forecasting Data`, `D8 Maintenance Data`, `D9 Report Data`,
+`D10 Activity Logs Data`, `D11 Backup Data`, `D12 Scan and Location Data`,
+`D13 Notification Data`, `D14 Sync Data`.
+
+These are **views inside `katipunan_ams`**, not 14 separate databases. They
+appear in phpMyAdmin under **Views**. Because MariaDB on Windows uses
+`lower_case_table_names=1`, phpMyAdmin displays them lowercase, for example
+`d1 user data`; the DFD labels remain uppercase in the documentation. Quote
+the names when querying manually, e.g. ``SELECT * FROM `D1 User Data`;``.
 
 `app_state` is **not a DFD data store** — it is the backend JSON snapshot that
 projects into D2–D10, so there is no D0 view.

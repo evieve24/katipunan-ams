@@ -132,20 +132,24 @@ flowchart LR
 
 | DFD store | Physical table(s) | View |
 | --- | --- | --- |
-| D1 User Data | `users`, `sessions` | `D1_User_Data` |
-| D2 Asset Data | `assets` | `D2_Asset_Data` |
-| D3 Borrow Data | `borrow` | `D3_Borrow_Data` |
-| D4 Inventory Data | `inventory` | `D4_Inventory_Data` |
-| D5 Asset Transfer Data | `asset_transfer` | `D5_Asset_Transfer_Data` |
-| D6 Asset Life Cycle Data | `asset_lifecycle` | `D6_Asset_Life_Cycle_Data` |
-| D7 Forecasting Data | `procurement_forecast` | `D7_Forecasting_Data` |
-| D8 Maintenance Data | `maintenance_asset_report` | `D8_Maintenance_Data` |
-| D9 Report Data | `report` | `D9_Report_Data` |
-| D10 Activity Logs Data | `activity_log`, `audit` | `D10_Activity_Logs_Data` |
-| D11 Backup Data | `backup` | `D11_Backup_Data` |
-| D12 Scan and Location Data | `asset_scan` | `D12_Scan_Location_Data` |
-| D13 Notification Data | `notifications` | `D13_Notification_Data` |
-| D14 Sync Data | `sync_events` | `D14_Sync_Data` |
+| D1 User Data | `users`, `sessions` | `D1 User Data` |
+| D2 Asset Data | `assets` | `D2 Asset Data` |
+| D3 Borrow Data | `borrow` | `D3 Borrow Data` |
+| D4 Inventory Data | `inventory` | `D4 Inventory Data` |
+| D5 Asset Transfer Data | `asset_transfer` | `D5 Asset Transfer Data` |
+| D6 Asset Life Cycle Data | `asset_lifecycle` | `D6 Asset Life Cycle Data` |
+| D7 Forecasting Data | `procurement_forecast` | `D7 Forecasting Data` |
+| D8 Maintenance Data | `maintenance_asset_report` | `D8 Maintenance Data` |
+| D9 Report Data | `report` | `D9 Report Data` |
+| D10 Activity Logs Data | `activity_log`, `audit` | `D10 Activity Logs Data` |
+| D11 Backup Data | `backup` | `D11 Backup Data` |
+| D12 Scan and Location Data | `asset_scan` | `D12 Scan and Location Data` |
+| D13 Notification Data | `notifications` | `D13 Notification Data` |
+| D14 Sync Data | `sync_events` | `D14 Sync Data` |
 
 The detailed process/table mapping and implementation notes are in
 [`DFD_MAPPING.md`](DFD_MAPPING.md).
+
+The DFD-named views are inside `katipunan_ams` under **Views**, not separate
+databases. On Windows/MariaDB they display lowercase in phpMyAdmin because of
+`lower_case_table_names=1`; query them with backticks if needed.

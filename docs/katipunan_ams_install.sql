@@ -353,13 +353,29 @@ CREATE TABLE IF NOT EXISTS `users` (
 USE `katipunan_ams`;
 
 DROP VIEW IF EXISTS `D0_Application_State`;
+DROP VIEW IF EXISTS `D1_User_Data`;
+DROP VIEW IF EXISTS `D2_Asset_Data`;
+DROP VIEW IF EXISTS `D3_Borrow_Data`;
+DROP VIEW IF EXISTS `D4_Inventory_Data`;
+DROP VIEW IF EXISTS `D5_Asset_Transfer_Data`;
+DROP VIEW IF EXISTS `D6_Asset_Life_Cycle_Data`;
+DROP VIEW IF EXISTS `D7_Forecasting_Data`;
+DROP VIEW IF EXISTS `D8_Maintenance_Data`;
+DROP VIEW IF EXISTS `D9_Report_Data`;
+DROP VIEW IF EXISTS `D10_Activity_Logs_Data`;
+DROP VIEW IF EXISTS `D11_Backup_Data`;
+DROP VIEW IF EXISTS `D12_Scan_Location_Data`;
+DROP VIEW IF EXISTS `D13_Notification_Data`;
+DROP VIEW IF EXISTS `D14_Sync_Data`;
 
-CREATE OR REPLACE VIEW `D1_User_Data` AS
+DROP VIEW IF EXISTS `D0_Application_State`;
+
+CREATE OR REPLACE VIEW `D1 User Data` AS
 SELECT u.id, u.username, u.name, u.role, u.office, u.active, u.created_at,
        (SELECT COUNT(*) FROM sessions s WHERE s.user_id = u.id) AS sessions_recorded
 FROM users u;
 
-CREATE OR REPLACE VIEW `D2_Asset_Data` AS
+CREATE OR REPLACE VIEW `D2 Asset Data` AS
 SELECT a.asset_id, a.asset_name, a.property_no, a.serial_no, a.qr_code,
        a.category, a.`condition`, a.office, a.location,
        a.latitude AS registered_latitude, a.longitude AS registered_longitude,
@@ -369,52 +385,52 @@ SELECT a.asset_id, a.asset_name, a.property_no, a.serial_no, a.qr_code,
        a.created_at, a.updated_at
 FROM assets a;
 
-CREATE OR REPLACE VIEW `D3_Borrow_Data` AS
+CREATE OR REPLACE VIEW `D3 Borrow Data` AS
 SELECT b.borrow_id, b.asset_id, a.asset_name, b.borrower_name,
        b.borrow_date, b.return_date, b.status, b.recorded_at
 FROM borrow b
 LEFT JOIN assets a ON a.asset_id = b.asset_id;
 
-CREATE OR REPLACE VIEW `D4_Inventory_Data` AS
+CREATE OR REPLACE VIEW `D4 Inventory Data` AS
 SELECT i.inventory_id, i.asset_id, a.asset_name, a.office AS asset_office,
        i.location, i.quantity, i.capture_date, i.sync_status,
        a.location AS registered_location
 FROM inventory i
 LEFT JOIN assets a ON a.asset_id = i.asset_id;
 
-CREATE OR REPLACE VIEW `D5_Asset_Transfer_Data` AS
+CREATE OR REPLACE VIEW `D5 Asset Transfer Data` AS
 SELECT t.transfer_id, t.asset_id, a.asset_name, t.from_office, t.to_office,
        t.transfer_date, t.remarks, t.sync_status
 FROM asset_transfer t
 LEFT JOIN assets a ON a.asset_id = t.asset_id;
 
-CREATE OR REPLACE VIEW `D6_Asset_Life_Cycle_Data` AS
+CREATE OR REPLACE VIEW `D6 Asset Life Cycle Data` AS
 SELECT l.lifecycle_id, l.asset_id, a.asset_name, l.lifecycle_stage,
        l.remaining_life, l.effective_date, a.acquisition_date, a.useful_life,
        a.`condition`
 FROM asset_lifecycle l
 LEFT JOIN assets a ON a.asset_id = l.asset_id;
 
-CREATE OR REPLACE VIEW `D7_Forecasting_Data` AS
+CREATE OR REPLACE VIEW `D7 Forecasting Data` AS
 SELECT f.forecast_id, f.asset_id, a.asset_name, f.forecast_year,
        f.predicted_quantity, f.estimated_cost, f.status, f.priority, f.bucket
 FROM procurement_forecast f
 LEFT JOIN assets a ON a.asset_id = f.asset_id;
 
-CREATE OR REPLACE VIEW `D8_Maintenance_Data` AS
+CREATE OR REPLACE VIEW `D8 Maintenance Data` AS
 SELECT m.maintenance_id, m.asset_id, a.asset_name, m.maintenance_type,
        m.description, m.maintenance_date, m.cost, m.status, m.technician,
        m.recorded_at
 FROM maintenance_asset_report m
 LEFT JOIN assets a ON a.asset_id = m.asset_id;
 
-CREATE OR REPLACE VIEW `D9_Report_Data` AS
+CREATE OR REPLACE VIEW `D9 Report Data` AS
 SELECT r.report_id, r.user_id, u.name AS user_name, u.role AS user_role,
        r.report_type, r.report_period, r.generated_at, r.file_path
 FROM report r
 LEFT JOIN users u ON u.id = r.user_id;
 
-CREATE OR REPLACE VIEW `D10_Activity_Logs_Data` AS
+CREATE OR REPLACE VIEW `D10 Activity Logs Data` AS
 SELECT 'activity' AS source, l.log_id AS record_id, l.user_id, u.name AS user_name,
        u.role AS user_role, l.action, l.details, l.`timestamp` AS recorded_at
 FROM activity_log l
@@ -425,13 +441,13 @@ SELECT 'audit', a.id, a.user_id, COALESCE(u.name, a.username), u.role,
 FROM audit a
 LEFT JOIN users u ON u.id = a.user_id;
 
-CREATE OR REPLACE VIEW `D11_Backup_Data` AS
+CREATE OR REPLACE VIEW `D11 Backup Data` AS
 SELECT b.backup_id, b.user_id, u.name AS user_name, u.role AS user_role,
        b.backup_date, b.file_name, b.storage_type, b.status
 FROM backup b
 LEFT JOIN users u ON u.id = b.user_id;
 
-CREATE OR REPLACE VIEW `D12_Scan_Location_Data` AS
+CREATE OR REPLACE VIEW `D12 Scan and Location Data` AS
 SELECT s.scan_id, s.asset_id, a.asset_name, a.office,
        a.location AS registered_location,
        s.user_id, u.name AS user_name, COALESCE(u.role, s.actor_role) AS user_role,
@@ -451,7 +467,7 @@ FROM asset_scan s
 LEFT JOIN assets a ON a.asset_id = s.asset_id
 LEFT JOIN users u ON u.id = s.user_id;
 
-CREATE OR REPLACE VIEW `D13_Notification_Data` AS
+CREATE OR REPLACE VIEW `D13 Notification Data` AS
 SELECT n.id, n.recipient_user_id, ru.name AS recipient_name,
        n.actor_user_id, n.actor_name, n.actor_role, n.action_type, n.action_label,
        n.asset_id, n.asset_name, n.details, n.changes_json, n.source,
@@ -459,7 +475,7 @@ SELECT n.id, n.recipient_user_id, ru.name AS recipient_name,
 FROM notifications n
 LEFT JOIN users ru ON ru.id = n.recipient_user_id;
 
-CREATE OR REPLACE VIEW `D14_Sync_Data` AS
+CREATE OR REPLACE VIEW `D14 Sync Data` AS
 SELECT e.id, e.at, e.device, e.action, e.asset_id, a.asset_name,
        e.user_id, u.name AS user_name, u.role AS user_role, e.payload
 FROM sync_events e
