@@ -2669,6 +2669,15 @@ function getSignatureLine(){
 }
 
 
+function reportPreviewToolbar(){
+  return `<div class="no-print" style="position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#f8f5ee;border:1px solid #d4c9a8;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-family:'Source Sans 3',sans-serif;box-shadow:0 2px 8px rgba(13,27,62,.08)">
+    <div style="font-weight:700;color:#0d1b3e;font-size:0.85rem">📄 Report Preview</div>
+    <div style="font-size:0.72rem;color:#4a5568;flex:1;min-width:180px">Review the list below, then print when ready.</div>
+    <button onclick="window.print()" style="border:none;border-radius:6px;padding:8px 14px;background:#0d1b3e;color:#e8c96d;font-family:inherit;font-size:0.74rem;font-weight:700;cursor:pointer">🖨 Print Report</button>
+    <button onclick="window.close()" style="border:1px solid #d4c9a8;border-radius:6px;padding:8px 14px;background:#fff;color:#4a5568;font-family:inherit;font-size:0.74rem;font-weight:600;cursor:pointer">✕ Close</button>
+  </div>`;
+}
+
 function printOverallReport(){
   const allEq=getAllEquipment();
   const usable=allEq.filter(e=>e.status==='Serviceable').length;
@@ -2690,8 +2699,9 @@ function printOverallReport(){
   const w=window.open('','_blank');
   if(!w){alert('Allow pop-ups for this site to generate reports.');return;}
   w.document.write(`<!DOCTYPE html><html><head><title>Overall Equipment Report</title>
-  <style>body{font-family:serif;color:#1a1a2e;padding:40px;max-width:1100px;margin:0 auto}table{width:100%;border-collapse:collapse}th{background:#0d1b3e;color:#c9a84c;padding:8px 10px;font-size:0.7rem;text-align:left}@media print{@page{margin:0.75in}}</style>
+  <style>body{font-family:serif;color:#1a1a2e;padding:40px;max-width:1100px;margin:0 auto}table{width:100%;border-collapse:collapse}th{background:#0d1b3e;color:#c9a84c;padding:8px 10px;font-size:0.7rem;text-align:left}@media print{@page{margin:0.75in}.no-print{display:none!important}}</style>
   </head><body>
+  ${reportPreviewToolbar()}
   ${getReportHeader('MUNICIPAL EQUIPMENT MASTER LIST','Overall Inventory Report — All Offices')}
   <div style="display:flex;gap:20px;margin-bottom:20px;font-family:serif;flex-wrap:wrap">
     <div style="text-align:center;border:1px solid #0d1b3e;border-radius:6px;padding:8px 14px"><div style="font-size:1.4rem;font-weight:700;color:#0d1b3e">${allEq.length}</div><div style="font-size:0.7rem">Total</div></div>
@@ -2704,7 +2714,6 @@ function printOverallReport(){
   <table><thead><tr><th>Item ID</th><th>Equipment</th><th>Brand/Model</th><th>Serial No.</th><th>Date Acquired</th><th>Amount (₱)</th><th>Category</th><th>Assigned To</th><th>Status</th></tr></thead>
   <tbody>${rows}</tbody></table>
   ${getSignatureLine()}
-  <script>window.onload=()=>window.print()<\/script>
   </body></html>`);
   w.document.close();
   logAction('Printed Overall Equipment Report');
@@ -3333,8 +3342,9 @@ function openReportWindow(title,subtitle,bodyContent){
     table{width:100%;border-collapse:collapse;margin-bottom:8px}
     th{background:#0d1b3e;color:#c9a84c;padding:7px 9px;font-size:0.72rem;text-align:left}
     td{padding:6px 8px;border-bottom:1px solid #eee;font-size:0.75rem}
-    @media print{@page{margin:0.75in}}
+    @media print{@page{margin:0.75in}.no-print{display:none!important}}
   </style></head><body>
+  ${reportPreviewToolbar()}
   <div style="text-align:center;border-bottom:2px solid #0d1b3e;padding-bottom:14px;margin-bottom:20px">
     <div style="font-size:2rem;margin-bottom:4px">🏛️</div>
     <div style="font-size:1.1rem;font-weight:700;color:#0d1b3e">${sysName}</div>
@@ -3348,7 +3358,6 @@ function openReportWindow(title,subtitle,bodyContent){
     <div style="text-align:center"><div style="border-top:1px solid #0d1b3e;width:200px;margin:0 auto;padding-top:4px"><strong>${oic}</strong>${oic!==oicPos?'<br>'+oicPos:''}</div></div>
     <div style="text-align:center"><div style="border-top:1px solid #0d1b3e;width:200px;margin:0 auto;padding-top:4px"><strong>Noted By:</strong><br>Municipal Mayor</div></div>
   </div>
-  <script>window.onload=()=>window.print()<\/script>
   </body></html>`);
   w.document.close();
 }
