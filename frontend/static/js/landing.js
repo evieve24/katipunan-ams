@@ -45,9 +45,3 @@ window.addEventListener('DOMContentLoaded', function(){
   }
 });
 
-// Landing "Sign in" link: drop any remembered session and go to role/login.
-function enterLogin(){
-  try{localStorage.removeItem('kat_token');localStorage.removeItem('kat_user');}catch(e){}
-  try{sessionStorage.setItem('kat_force_login','1');}catch(e){}
-  location.reload();
-}

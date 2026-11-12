@@ -1577,14 +1577,12 @@ function showProfile(staff){
         <div class="profile-actions">
           <label class="pact-btn" style="cursor:pointer" title="Upload profile photo">📷 Photo<input type="file" accept="image/*" style="display:none" onchange="uploadAvatarPhoto('${staff.id}',this)"></label>
           <button class="pact-btn" onclick="openEditPersonalModal('${staff.id}')" style="background:rgba(201,168,76,0.12);color:var(--gold);border:1px solid var(--gold-dim)">✏️ Edit Info</button>
-          <button class="pact-btn primary" onclick="printIndividualReport()">🖨️ Print</button>
         </div>
       </div>
     </div>
     <div>
       <div class="equip-section-title"><span style="display:flex;align-items:center;gap:7px">🖥️ Assigned Equipment <span class="tag tag-blue" id="eqCountTag">${staff.equipment.length} items</span></span>
         <div style="display:flex;gap:6px;flex-shrink:0;align-items:center;">
-          <button onclick="printIndividualReport()" style="display:inline-flex;align-items:center;gap:5px;padding:5px 13px;border-radius:7px;border:1.5px solid var(--gold-dim);background:rgba(201,168,76,0.08);color:var(--gold);font-family:'Source Sans 3',sans-serif;font-size:0.73rem;font-weight:600;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(201,168,76,0.2)'" onmouseout="this.style.background='rgba(201,168,76,0.08)'">🖨️ Print Profile</button>
           <button onclick="openAddEquipmentModal('${staff.id}')" style="display:inline-flex;align-items:center;gap:5px;padding:5px 13px;border-radius:7px;border:1.5px solid var(--gold-dim);background:rgba(201,168,76,0.08);color:var(--gold);font-family:'Source Sans 3',sans-serif;font-size:0.73rem;font-weight:600;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(201,168,76,0.2)'" onmouseout="this.style.background='rgba(201,168,76,0.08)'">＋ Add Equipment</button>
         </div>
       </div>
@@ -2698,60 +2696,6 @@ function getSignatureLine(){
 }
 
 
-function printIndividualReport(){
-  if(!currentStaff){alert('Please open a staff profile first.');return;}
-  const s=currentStaff;
-  // Resolve office & department names from current navigation state
-  let officeName='—', deptName='—';
-  if(currentOfficeId && officeData[currentOfficeId]){
-    officeName = officeData[currentOfficeId].name;
-  }
-  if(currentDeptId){
-    for(const[,od] of Object.entries(officeData)){
-      const f=od.depts.find(d=>d.id===currentDeptId);
-      if(f){deptName=f.name;break;}
-    }
-  }
-  const ppe=s.equipment.filter(e=>getCategory(e)==='PPE');
-  const semi=s.equipment.filter(e=>getCategory(e)==='Semi-Expendable');
-  const makeRows=(list)=>list.map(eq=>`<tr>
-    <td style="padding:6px 8px;border-bottom:1px solid #eee;font-size:0.73rem">${eq.id}</td>
-    <td style="padding:6px 8px;border-bottom:1px solid #eee;font-size:0.73rem">${eq.name}</td>
-    <td style="padding:6px 8px;border-bottom:1px solid #eee;font-size:0.73rem">${eq.brand}</td>
-    <td style="padding:6px 8px;border-bottom:1px solid #eee;font-size:0.73rem">${eq.serial}</td>
-    <td style="padding:6px 8px;border-bottom:1px solid #eee;font-size:0.73rem">${eq.acquiredDate||'N/A'}</td>
-    <td style="padding:6px 8px;border-bottom:1px solid #eee;font-size:0.73rem">${formatAmt(eq.amount)}</td>
-    <td style="padding:6px 8px;border-bottom:1px solid #eee;font-size:0.73rem;font-weight:700;color:${eq.status==='Serviceable'?'#2d7d46':eq.status==='Damaged'?'#b7791f':'#c0392b'}">${eq.status}</td>
-  </tr>`).join('');
-  const colHeaders=`<thead><tr><th>Item ID</th><th>Equipment</th><th>Brand/Model</th><th>Serial No.</th><th>Date Acquired</th><th>Amount (₱)</th><th>Status</th></tr></thead>`;
-  const w=window.open('','_blank');
-  w.document.write(`<!DOCTYPE html><html><head><title>Equipment Report — ${s.name}</title>
-  <style>body{font-family:serif;color:#1a1a2e;padding:40px;max-width:900px;margin:0 auto}table{width:100%;border-collapse:collapse}th{background:#0d1b3e;color:#c9a84c;padding:8px 10px;font-size:0.73rem;text-align:left}@media print{@page{margin:1in}}.office-banner{background:#f4f0e6;border:1px solid #c9a84c;border-radius:6px;padding:8px 14px;margin-bottom:16px;display:flex;align-items:center;gap:18px;font-size:0.8rem}.office-banner strong{color:#0d1b3e}</style>
-  </head><body>
-  ${getReportHeader('INDIVIDUAL EQUIPMENT ACCOUNTABILITY REPORT','Personnel Equipment Inventory')}
-  <div class="office-banner">
-    <div>🏢 <strong>Office:</strong> ${officeName}</div>
-    <div style="color:#a07c2e">▸</div>
-    <div>📂 <strong>Section / Department:</strong> ${deptName}</div>
-  </div>
-  <table style="margin-bottom:20px;width:100%;border-collapse:collapse">
-    <tr><td style="padding:5px 0;font-size:0.82rem"><strong>Name:</strong> ${s.name}</td><td style="padding:5px 0;font-size:0.82rem"><strong>Position:</strong> ${s.pos}</td></tr>
-    <tr><td style="padding:5px 0;font-size:0.82rem"><strong>Age:</strong> ${s.age}</td><td style="padding:5px 0;font-size:0.82rem"><strong>Gender:</strong> ${s.gender==='F'?'Female':'Male'}</td></tr>
-    <tr><td style="padding:5px 0;font-size:0.82rem"><strong>Address:</strong> ${s.address}</td><td style="padding:5px 0;font-size:0.82rem"><strong>Contact:</strong> ${s.contact}</td></tr>
-    <tr><td style="padding:5px 0;font-size:0.82rem"><strong>Office Location:</strong> ${officeName} — ${deptName}</td><td style="padding:5px 0;font-size:0.82rem"><strong>Years of Service:</strong> ${s.yos}</td></tr>
-    <tr><td style="padding:5px 0;font-size:0.82rem"><strong>Employment Status:</strong> ${s.status}</td><td></td></tr>
-  </table>
-  ${ppe.length?`<div style="font-size:0.85rem;font-weight:700;color:#0d1b3e;margin:14px 0 8px;border-bottom:1px solid #0d1b3e;padding-bottom:4px">PPE — Property, Plant & Equipment (₱50,000 & above) — ${ppe.length} item(s)</div>
-  <table>${colHeaders}<tbody>${makeRows(ppe)}</tbody></table>`:''}
-  ${semi.length?`<div style="font-size:0.85rem;font-weight:700;color:#0d1b3e;margin:14px 0 8px;border-bottom:1px solid #0d1b3e;padding-bottom:4px">Semi-Expendable (below ₱50,000) — ${semi.length} item(s)</div>
-  <table>${colHeaders}<tbody>${makeRows(semi)}</tbody></table>`:''}
-  ${!ppe.length&&!semi.length?`<table>${colHeaders}<tbody>${makeRows(s.equipment)}</tbody></table>`:''}
-  ${getSignatureLine()}
-  <script>window.onload=()=>window.print()<\/script>
-  </body></html>`);
-  logAction(`Printed individual report for ${s.name}`);
-}
-
 function printOverallReport(){
   const allEq=getAllEquipment();
   const usable=allEq.filter(e=>e.status==='Serviceable').length;
@@ -3699,7 +3643,6 @@ function openChainModal(eqId,eqName,ownerName){
   <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
     <div><div class="modal-title" style="margin-bottom:2px">🔄 Asset Transfer</div>
     <div class="modal-sub" style="margin-bottom:0">${eqId} · ${eqName} · Current: ${ownerName}</div></div>
-    <div style="margin-left:auto"><button onclick="printModalSection('chainTimeline','Asset Transfer — ${eqName} (${eqId})')" style="display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,#0d1b3e,#1e3a6e);color:#e8c96d;border:1px solid #c9a84c;border-radius:7px;padding:6px 14px;font-size:0.73rem;font-weight:700;cursor:pointer;font-family:'Source Sans 3',sans-serif;transition:all 0.2s;" onmouseover="this.style.background='linear-gradient(135deg,#1e3a6e,#2b5ca8)'" onmouseout="this.style.background='linear-gradient(135deg,#0d1b3e,#1e3a6e)'">🖨️ Print Chain</button></div>
   </div>
   <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:14px">
     <div style="font-size:0.78rem;font-weight:700;color:var(--text-dark);margin-bottom:10px">📝 Add Transfer Record</div>
@@ -3783,7 +3726,6 @@ function openRepairModal(eqId,eqName){
     <div class="modal-sub" style="margin-bottom:0">${eqId} · ${eqName}</div></div>
     <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
       <span class="repair-total-chip">Total Repairs: ₱${totalCost.toLocaleString('en-PH',{minimumFractionDigits:2})}</span>
-      <button onclick="printModalSection('repairTimeline','Repair Log — ${eqName} (${eqId})')" style="display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,#0d1b3e,#1e3a6e);color:#e8c96d;border:1px solid #c9a84c;border-radius:7px;padding:6px 14px;font-size:0.73rem;font-weight:700;cursor:pointer;font-family:'Source Sans 3',sans-serif;transition:all 0.2s;" onmouseover="this.style.background='linear-gradient(135deg,#1e3a6e,#2b5ca8)'" onmouseout="this.style.background='linear-gradient(135deg,#0d1b3e,#1e3a6e)'">🖨️ Print Repairs</button>
     </div>
   </div>
   <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:14px">
@@ -3884,7 +3826,6 @@ function openBorrowModal(eqId,eqName,ownerName){
   <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
     <div><div class="modal-title" style="margin-bottom:2px">📤 Borrow / Issuance Slip</div>
     <div class="modal-sub" style="margin-bottom:0">${eqId} · ${eqName} · Accountable: ${ownerName}</div></div>
-    <div style="margin-left:auto"><button onclick="printModalSection('borrowTimeline','Borrow Records — ${eqName} (${eqId})')" style="display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,#0d1b3e,#1e3a6e);color:#e8c96d;border:1px solid #c9a84c;border-radius:7px;padding:6px 14px;font-size:0.73rem;font-weight:700;cursor:pointer;font-family:'Source Sans 3',sans-serif;transition:all 0.2s;" onmouseover="this.style.background='linear-gradient(135deg,#1e3a6e,#2b5ca8)'" onmouseout="this.style.background='linear-gradient(135deg,#0d1b3e,#1e3a6e)'">🖨️ Print Borrows</button></div>
   </div>
   <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:14px">
     <div style="font-size:0.78rem;font-weight:700;color:var(--text-dark);margin-bottom:10px">📝 Issue New Borrow Slip</div>
@@ -5202,59 +5143,6 @@ document.addEventListener('DOMContentLoaded',()=>{
 // ══════════════════════════════════════════════════════════
 // PRINT MODAL SECTION
 // ══════════════════════════════════════════════════════════
-function printModalSection(sectionId, title) {
-  const el = document.getElementById(sectionId);
-  if (!el) { alert('No records to print.'); return; }
-  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-  const printWin = window.open('', '_blank', 'width=820,height=700');
-  printWin.document.write(`<!DOCTYPE html><html><head>
-  <meta charset="UTF-8">
-  <title>${title}</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box;}
-    body{font-family:'Source Sans 3',sans-serif;font-size:13px;color:#1a1a2e;background:#fff;padding:32px;}
-    h1{font-family:'Playfair Display',serif;font-size:1.4rem;color:#0d1b3e;margin-bottom:4px;}
-    .print-meta{font-size:0.72rem;color:#718096;margin-bottom:22px;border-bottom:2px solid #c9a84c;padding-bottom:10px;}
-    .gso-card{border:1px solid #d4c9a8;border-radius:8px;padding:12px 14px;margin-bottom:10px;background:#f8f5ee;}
-    .gso-card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;}
-    .gso-card-title{font-weight:700;font-size:0.88rem;color:#1a1a2e;}
-    .gso-card-meta{font-size:0.7rem;color:#718096;margin-top:2px;}
-    .gso-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;}
-    .gso-detail-row{display:flex;flex-direction:column;}
-    .gso-detail-label{font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#a07c2e;}
-    .gso-detail-val{font-size:0.78rem;color:#1a1a2e;}
-    .gso-chip{display:inline-block;border-radius:20px;padding:2px 8px;font-size:0.65rem;font-weight:700;letter-spacing:0.04em;}
-    .gso-chip-navy{background:#e8edf8;color:#0d1b3e;}
-    .gso-chip-green{background:#ebf7ef;color:#2d7d46;}
-    .gso-chip-orange{background:#fff8e1;color:#b7791f;}
-    .gso-chip-red{background:#fdf0ee;color:#c0392b;}
-    .chain-timeline{position:relative;padding-left:20px;}
-    .chain-timeline::before{content:'';position:absolute;left:6px;top:0;bottom:0;width:2px;background:#d4c9a8;}
-    .chain-entry{position:relative;margin-bottom:14px;}
-    .chain-entry::before{content:'';position:absolute;left:-17px;top:5px;width:10px;height:10px;border-radius:50%;background:#c9a84c;border:2px solid #fff;}
-    .chain-entry-head{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:3px;}
-    .chain-date{font-size:0.65rem;color:#718096;}
-    .slip-number{font-family:monospace;font-size:0.7rem;font-weight:700;background:#e8edf8;color:#0d1b3e;border-radius:4px;padding:1px 6px;}
-    .borrow-status-returned{border-left:3px solid #2d7d46;}
-    .borrow-status-borrowed{border-left:3px solid #b7791f;}
-    .borrow-status-overdue{border-left:3px solid #c0392b;}
-    .repair-total-chip{background:linear-gradient(135deg,#0d1b3e,#1e3a6e);color:#e8c96d;border-radius:20px;padding:3px 12px;font-size:0.7rem;font-weight:700;}
-    .empty-state{text-align:center;padding:30px;color:#718096;}
-    .mark-returned-btn{display:none;}
-    .print-footer{margin-top:28px;padding-top:10px;border-top:1px solid #d4c9a8;font-size:0.65rem;color:#a0aec0;display:flex;justify-content:space-between;}
-    @media print{body{padding:18px;} .no-print{display:none;}}
-  </style>
-  </head><body>
-  <h1>🏛️ LGU Katipunan — ${title}</h1>
-  <div class="print-meta">Printed on: ${new Date().toLocaleString('en-PH',{dateStyle:'long',timeStyle:'short'})} &nbsp;·&nbsp; QR Code-Based Asset Management System</div>
-  ${el.innerHTML}
-  <div class="print-footer"><span>LGU Katipunan — Asset Management System</span><span>Printed: ${new Date().toLocaleString('en-PH')}</span></div>
-  <script>window.onload=function(){window.print();}<\/script>
-  </body></html>`);
-  printWin.document.close();
-}
-
 /* Update ms_showToast to use correct element */
 function ms_showToast(msg){
   const t=document.getElementById('ms_mobileToast');
