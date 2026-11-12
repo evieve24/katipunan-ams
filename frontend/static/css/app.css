@@ -1616,11 +1616,6 @@ mark{background:#fff3cd;color:var(--navy);border-radius:2px;padding:0 2px;}
 .pf-overdue{color:var(--red);font-weight:700}
 .pf-edit{border:1px solid var(--border);background:var(--bg);color:var(--text-dark);border-radius:6px;padding:3px 7px;cursor:pointer;font-size:0.7rem}
 .pf-edit:hover{border-color:var(--gold-dim)}
-.pf-method{margin-top:14px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;font-size:0.74rem;color:var(--text-mid);line-height:1.6}
-.pf-method summary{cursor:pointer;font-weight:700;color:var(--text-dark)}
-.pf-method code{background:var(--bg);padding:1px 5px;border-radius:4px;font-size:0.72rem;color:var(--text-dark)}
-.pf-method table{border-collapse:collapse;margin:8px 0}
-.pf-method td,.pf-method th{border:1px solid var(--border);padding:4px 9px;text-align:left;font-size:0.72rem}
 body:not(.role-oic) .action-btn.delete,body:not(.role-oic) .staff-card .action-btn{display:none!important}
 
 /* ---- Style block 2 (from index.html) ---- */

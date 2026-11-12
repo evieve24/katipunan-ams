@@ -185,16 +185,6 @@ function pfRender(){
         <td>${PF_BUCKETS[a.b]}</td>
         <td>${a.estCost?pfPeso(a.estCost):'<span class="pf-sub">—</span>'}</td>
         <td><button class="pf-edit" title="Edit asset details" onclick="pfEdit(${i})">✏️</button></td></tr>`;}).join('')+`</tbody></table>`;
-
-  document.getElementById('pfMethod').innerHTML=`<summary>📐 How the forecast is computed</summary>
-    <p style="margin-top:8px"><code>Remaining Useful Life = Expected Useful Life − Elapsed Useful Life</code>, where elapsed life is the time since the acquisition date. If no expected useful life is recorded for an asset, a default estimate by equipment type is used (marked <i>default</i>); edit the asset to set the actual value.</p>
-    <table><tr><th>Factor</th><th>Max points</th><th>How it is scored</th></tr>
-      <tr><td>Remaining useful life</td><td>${PF_W.life}</td><td>Share of useful life already used</td></tr>
-      <tr><td>Condition</td><td>${PF_W.cond}</td><td>Unserviceable ${PF_COND.Unserviceable} · Damaged ${PF_COND.Damaged} · Lost/Missing ${PF_COND.Lost} · Serviceable 0</td></tr>
-      <tr><td>Repair history</td><td>${PF_W.repair}</td><td>${PF_REP_PTS} points per recorded repair</td></tr>
-      <tr><td>Maintenance cost</td><td>${PF_W.cost}</td><td>Cumulative repair cost ÷ acquisition cost; full points at ${PF_COST_FULL*100}% or more</td></tr></table>
-    <p><b>Priority:</b> Critical ≥ 70 (or life ended and Damaged/Unserviceable) · High ≥ 50 (or life ended, Unserviceable, or repair cost ≥ ${PF_COST_FULL*100}% of acquisition cost) · Medium ≥ 30 (or Damaged/Lost/Missing) · Low otherwise.</p>
-    <p><b>Estimated cost</b> uses the original acquisition amount, raised by the yearly price increase set above for each year until replacement. It excludes assets with no recorded amount and lost/missing assets. These are planning estimates, not procurement budgets.</p>`;
 }
 
 function pfEdit(i){
