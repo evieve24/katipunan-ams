@@ -251,6 +251,9 @@ Default Project/
 - The scanner is tuned for speed: QR-only decoding, native
   `BarcodeDetector` when the browser supports it, 30 FPS, and an adaptive scan
   box (65% of the viewfinder).
+- The layout is responsive from phone to desktop: an off-canvas sidebar with a
+  hamburger button, stacked statistics/settings grids, horizontally scrollable
+  tables, full-screen mobile scanner, and 94vw modals.
 - Phones and tablets prefer the rear camera (`facingMode: environment`); laptops
   and desktops can select any connected webcam/USB camera.
 - After a scan, the result screen shows the **registered location** and

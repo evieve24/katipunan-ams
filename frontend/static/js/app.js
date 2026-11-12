@@ -848,6 +848,35 @@ function goBack(){
 }
 function goToNav(i){const t=navStack[i];navStack=navStack.slice(0,i+1);t.fn();}
 
+/* ── RESPONSIVE SIDEBAR DRAWER ── */
+function toggleMobileSidebar(force){
+  const sidebar=document.getElementById('sidebar');
+  const overlay=document.getElementById('mobileSidebarOverlay');
+  if(!sidebar)return;
+  const open=force===true?true:force===false?false:!sidebar.classList.contains('mobile-open');
+  sidebar.classList.toggle('mobile-open',open);
+  if(overlay)overlay.classList.toggle('show',open);
+  document.body.classList.toggle('mobile-nav-open',open);
+}
+function closeMobileSidebar(){toggleMobileSidebar(false);}
+function normalizeSidebarForViewport(){
+  const sidebar=document.getElementById('sidebar');
+  if(window.innerWidth>900){
+    closeMobileSidebar();
+  }else if(sidebar){
+    sidebar.classList.remove('collapsed');
+  }
+}
+window.addEventListener('resize',normalizeSidebarForViewport);
+document.addEventListener('DOMContentLoaded',normalizeSidebarForViewport);
+document.addEventListener('keydown',function(event){
+  if(event.key==='Escape')closeMobileSidebar();
+});
+document.addEventListener('click',function(event){
+  if(window.innerWidth>900)return;
+  if(event.target.closest('#sidebar .nav-item'))closeMobileSidebar();
+});
+
 function getStatusClass(s){
   if(s==='Serviceable')return 'eq-usable';
   if(s==='Unserviceable')return 'eq-unusable';
