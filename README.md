@@ -258,6 +258,11 @@ Default Project/
   scan time, a distance check, a **map preview**, **View on Map** and
   **Registered Location** links, **Retry Location**, and the **scan/location
   history**.
+- To add registered coordinates to an existing asset, open the asset's
+  **Edit Equipment** dialog → **Registered Coordinates** → **Use current
+  location** → **Save Changes**. This is the only way to set official
+  coordinates after the asset was created; scanning never changes them.
+  Scan time is shown even when GPS is unavailable.
 - Scans are written to **IndexedDB** first (`katipunan_ams_scans`). When online
   they are posted to `POST /api/scans`; when offline they remain queued with an
   **Offline · N queued** indicator and synchronize automatically when the

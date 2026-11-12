@@ -1701,6 +1701,16 @@
           <option>Water System</option><option>Market Office</option>
         </select>
       </div>
+      <div class="modal-form-row" style="grid-column:1/-1">
+        <label>📍 Registered Coordinates</label>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input id="editEqRegDisplay" readonly placeholder="Not available" style="flex:1;min-width:180px;padding:7px 10px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text-dark);font-size:0.78rem">
+          <button type="button" class="settings-btn" onclick="captureRegisteredLocation()" style="white-space:nowrap">Use current location</button>
+        </div>
+        <div id="editEqRegMsg" style="font-size:0.7rem;color:var(--text-light);margin-top:4px"></div>
+        <input type="hidden" id="editEqRegLat"><input type="hidden" id="editEqRegLng">
+        <input type="hidden" id="editEqRegAcc"><input type="hidden" id="editEqRegAt">
+      </div>
       <div class="modal-form-row" style="grid-column:1/-1"><label>⚙️ Status</label>
         <select id="editEqStatus" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text-dark);font-size:0.82rem">
           <option>Serviceable</option><option>Unserviceable</option><option>Damaged</option><option>Lost</option><option>Missing</option>

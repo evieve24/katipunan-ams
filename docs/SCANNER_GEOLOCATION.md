@@ -157,6 +157,11 @@ notify the OIC as before.
 - Result screens (mobile and modal): registered vs scanned coordinates,
   accuracy, scan time, distance check, map preview, Google Maps buttons,
   retry location, scan/location history, online/offline/pending indicator.
+- **Edit Equipment** includes a **Registered Coordinates** field with a
+  **Use current location** button. Saving it updates the asset's official
+  registered coordinates (used for the scan comparison); scans never change
+  them automatically.
+- Scan time is displayed from the scan timestamp even when no GPS fix exists.
 - Top sync bar now includes pending scan count.
 
 ### Camera/device behaviour

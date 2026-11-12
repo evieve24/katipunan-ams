@@ -749,7 +749,8 @@ function renderScanMonitoring(spec,assetId,loc,eq){
   setText(spec.regCoords,hasReg?coordText(regLat,regLng):'Not available');
   setText(spec.scanCoords,scanOk?coordText(loc.lat,loc.lng):(isDemo?'Demo coordinates (not saved)':'Location not captured'));
   setText(spec.accuracy,scanOk?'±'+Number(loc.acc).toFixed(1)+' m':'—');
-  setText(spec.time,loc&&loc.at?new Date(loc.at).toLocaleString('en-PH'):'—');
+  const scanAt=(loc&&loc.at)?loc.at:(window._lastScanAt||null);
+  setText(spec.time,scanAt?new Date(scanAt).toLocaleString('en-PH'):'—');
   let check='Registered coordinates are not available — compare with the assigned location.';
   if(hasReg&&scanOk){
     const d=haversineMeters(Number(regLat),Number(regLng),Number(loc.lat),Number(loc.lng));
@@ -1133,7 +1134,7 @@ async function onQRScanSuccess(decodedText){
     window._lastScannedId=data.id;
     // Record latitude/longitude on the asset
     recordAssetScan(data.id,scanLoc,'qr_scan');
-    _scanLoc=scanLoc;window._lastScanLoc=scanLoc;
+    _scanLoc=scanLoc;window._lastScanLoc=scanLoc;window._lastScanAt=new Date().toISOString();
     if(found.eq)queueAssetScan(data.id,scanLoc,'qr_scan',found.eq);
     try{renderScanMonitoring(MODAL_SCAN_SPEC,data.id,scanLoc,found.eq);}catch(e){}
     if(!scanLoc)showSyncToast('📍 Location not captured — allow location access to record where assets are scanned');
@@ -2993,9 +2994,51 @@ function openEditEquipmentModal(staffId,eqId){
   document.getElementById('editEqCalibration').value=eq.calibrationDate||'';
   document.getElementById('editEqExpiration').value=eq.expirationDate||'';
   document.getElementById('editEqRemarks').value=eq.remarks||'';
+  // Show/save registered coordinates (used for scan-location comparison).
+  const regLat=eq.regLat!=null?eq.regLat:(eq.latitude!=null?eq.latitude:'');
+  const regLng=eq.regLng!=null?eq.regLng:(eq.longitude!=null?eq.longitude:'');
+  const regDisp=document.getElementById('editEqRegDisplay');
+  const regMsg=document.getElementById('editEqRegMsg');
+  document.getElementById('editEqRegLat').value=coordOk(regLat)?Number(regLat):'';
+  document.getElementById('editEqRegLng').value=coordOk(regLng)?Number(regLng):'';
+  document.getElementById('editEqRegAcc').value=eq.regAcc!=null?eq.regAcc:'';
+  document.getElementById('editEqRegAt').value=eq.regAt||'';
+  if(coordOk(regLat)&&coordOk(regLng)){
+    if(regDisp)regDisp.value=Number(regLat).toFixed(6)+', '+Number(regLng).toFixed(6);
+    if(regMsg)regMsg.textContent='Registered coordinates saved for this asset.';
+  }else{
+    if(regDisp)regDisp.value='';
+    if(regMsg)regMsg.textContent='Not available — use current location to set the asset’s registered coordinates.';
+  }
   document.getElementById('editEquipmentModal').classList.add('open');
   // Re-trigger category display after modal paint
   setTimeout(()=>autoSetCategory('editEqAmount','editEqCategory','editEqCategoryDisplay'),30);
+}
+
+async function captureRegisteredLocation(){
+  const msg=document.getElementById('editEqRegMsg');
+  if(msg)msg.textContent='Locating…';
+  const loc=await getScanLocation();
+  if(!loc){
+    if(msg)msg.textContent='Location unavailable. Allow location access and try again.';
+    return;
+  }
+  if(loc.demo){
+    if(msg)msg.textContent='Demo coordinates cannot be saved as registered coordinates.';
+    return;
+  }
+  const lat=Number(loc.lat),lng=Number(loc.lng);
+  if(!coordOk(lat)||!coordOk(lng)){
+    if(msg)msg.textContent='Invalid location received. Try again.';
+    return;
+  }
+  document.getElementById('editEqRegLat').value=lat;
+  document.getElementById('editEqRegLng').value=lng;
+  document.getElementById('editEqRegAcc').value=loc.acc!=null?loc.acc:'';
+  document.getElementById('editEqRegAt').value=new Date().toISOString();
+  const disp=document.getElementById('editEqRegDisplay');
+  if(disp)disp.value=lat.toFixed(6)+', '+lng.toFixed(6);
+  if(msg)msg.textContent='Captured: '+lat.toFixed(5)+', '+lng.toFixed(5)+' (±'+loc.acc+'m). Click Save Changes to store.';
 }
 
 function saveEditEquipment(){
@@ -3020,6 +3063,16 @@ function saveEditEquipment(){
           eq.calibrationDate=document.getElementById('editEqCalibration').value||eq.calibrationDate||'';
           eq.expirationDate=document.getElementById('editEqExpiration').value||eq.expirationDate||'';
           eq.remarks=document.getElementById('editEqRemarks').value.trim();
+          const regLatRaw=document.getElementById('editEqRegLat').value;
+          const regLngRaw=document.getElementById('editEqRegLng').value;
+          if(coordOk(regLatRaw)&&coordOk(regLngRaw)){
+            eq.regLat=Number(regLatRaw);
+            eq.regLng=Number(regLngRaw);
+            const regAcc=document.getElementById('editEqRegAcc').value;
+            if(regAcc!==''&&isFinite(Number(regAcc)))eq.regAcc=Number(regAcc);
+            const regAt=document.getElementById('editEqRegAt').value;
+            if(regAt)eq.regAt=regAt;
+          }
           document.getElementById('editEquipmentModal').classList.remove('open');
           logAction(`Edited equipment ${origId} (${eq.name})`);
           showSyncToast(`✏️ ${eq.name} updated`);
@@ -4881,6 +4934,7 @@ async function onQRDecoded(rawText) {
     } catch(e){}
     recordAssetScan(scannedAsset.id,_scanLoc,'qr_mobile_scan');
     window._lastScanLoc=_scanLoc;
+    window._lastScanAt=new Date().toISOString();
     if(eq)queueAssetScan(scannedAsset.id,_scanLoc,'qr_mobile_scan',eq);
     try{queueSync('qr_scan',{assetId:scannedAsset.id,scannedAt:new Date().toISOString(),scannedLat:_scanLoc?_scanLoc.lat:null,scannedLng:_scanLoc?_scanLoc.lng:null,scannedAccuracy:_scanLoc?_scanLoc.acc:null,scannedDemo:!!(_scanLoc&&_scanLoc.demo),scannedLocation:currentGeo});}catch(e){}
     // Show the confirmation banner and wait for "View Asset Details".
