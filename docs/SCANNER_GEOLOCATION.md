@@ -150,6 +150,8 @@ notify the OIC as before.
 
 - Mobile scanner: camera selector, **Start**, **Stop**, **Scan Again**, and
   **Close** buttons, existing tap-to-scan, image upload, demo scan.
+- QR-only decoding, native BarcodeDetector where available, 30 FPS, and an
+  adaptive scan box for faster detection.
 - Scanner modal: camera selector, **Start**, **Stop**, **Scan Again** buttons,
   image upload.
 - Result screens (mobile and modal): registered vs scanned coordinates,

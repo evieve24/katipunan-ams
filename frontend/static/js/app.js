@@ -943,6 +943,16 @@ window.addEventListener('offline',()=>{
 // ══════════════════════════════════════════════════════════
 let html5QrScanner=null;
 
+function createQrScanner(elementId){
+  const config={
+    useBarCodeDetectorIfSupported:true,
+    experimentalFeatures:{useBarCodeDetectorIfSupported:true}
+  };
+  if(typeof Html5QrcodeSupportedFormats!=='undefined'&&typeof Html5QrcodeSupportedFormats.QR_CODE!=='undefined'){
+    config.formatsToSupport=[Html5QrcodeSupportedFormats.QR_CODE];
+  }
+  return new Html5Qrcode(elementId,config);
+}
 function cameraErrorMessage(err){
   const name=(err&&err.name)||'';
   if(!window.isSecureContext)return 'Camera requires localhost or HTTPS. Open the app at http://localhost:8080 or use HTTPS.';
@@ -1004,12 +1014,12 @@ async function startModalScanner(){
   for(const cfg of qrCameraCandidates('qrCameraSel')){
     if(!document.getElementById('qrScannerModal').classList.contains('open'))return null;
     if(reader)reader.innerHTML='';
-    const scanner=new Html5Qrcode('qr-reader');
+    const scanner=createQrScanner('qr-reader');
     html5QrScanner=scanner;
     try{
       await scanner.start(
         cfg,
-        {fps:15,qrbox:(w,h)=>{const s=Math.max(180,Math.floor(Math.min(w,h)*0.72));return{width:s,height:s};},aspectRatio:1.0,disableFlip:false},
+        {fps:30,qrbox:(w,h)=>{const s=Math.max(160,Math.floor(Math.min(w,h)*0.65));return{width:s,height:s};},aspectRatio:1.0,disableFlip:false},
         onQRScanSuccess,
         ()=>{}
       );
@@ -1204,7 +1214,7 @@ async function scanQRImage(file){
   try{
     if(html5QrScanner){try{await html5QrScanner.stop();}catch(e){}html5QrScanner=null;}
     document.getElementById('qr-reader').innerHTML='';
-    const scanner=new Html5Qrcode('qr-reader');
+    const scanner=createQrScanner('qr-reader');
     html5QrScanner=scanner;
     const text=await scanner.scanFile(file,true);
     await onQRScanSuccess(text);
@@ -4722,12 +4732,12 @@ async function startMobileQRScan(deviceId) {
   for (const cfg of qrCameraCandidates('msCameraSel')) {
     if (!document.getElementById('view-mobilescanner')?.classList.contains('active')) return null;
     reader.innerHTML = '';
-    const scanner = new Html5Qrcode('msInlineReader');
+    const scanner = createQrScanner('msInlineReader');
     msInlineScanner = scanner;
     try {
       await scanner.start(
         cfg,
-        { fps: 15, qrbox: (w, h) => { const s = Math.max(140, Math.floor(Math.min(w, h) * 0.72)); return { width: s, height: s }; }, aspectRatio: 1.0, disableFlip: false },
+        { fps: 30, qrbox: (w, h) => { const s = Math.max(130, Math.floor(Math.min(w, h) * 0.65)); return { width: s, height: s }; }, aspectRatio: 1.0, disableFlip: false },
         (text) => {
           if (msInlineScanBusy) return;
           msInlineScanBusy = true;
@@ -4778,7 +4788,7 @@ async function msScanQRFile(file) {
     holder.style.display = 'none';
     document.body.appendChild(holder);
   }
-  const scanner = new Html5Qrcode('msQRFileReader');
+  const scanner = createQrScanner('msQRFileReader');
   try {
     const text = await scanner.scanFile(file, true);
     scanner.clear();

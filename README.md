@@ -248,6 +248,9 @@ Default Project/
   selector**, **Start**, **Stop**, **Scan Again**, and **Upload QR image**.
   The Mobile Scanner also has visible **Close** buttons (topbar and control
   row) that stop the camera and return to the previous screen or dashboard.
+- The scanner is tuned for speed: QR-only decoding, native
+  `BarcodeDetector` when the browser supports it, 30 FPS, and an adaptive scan
+  box (65% of the viewfinder).
 - Phones and tablets prefer the rear camera (`facingMode: environment`); laptops
   and desktops can select any connected webcam/USB camera.
 - After a scan, the result screen shows the **registered location** and
