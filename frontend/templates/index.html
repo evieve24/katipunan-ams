@@ -1618,14 +1618,8 @@
         <div id="addEqCategoryDisplay" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text-light);font-size:0.82rem;min-height:34px;display:flex;align-items:center;font-style:italic">— Enter amount to auto-set —</div>
       </div>
       <div class="modal-form-row"><label>📍 Location</label>
-        <select id="addEqLocation" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text-dark);font-size:0.82rem">
-          <option>Not Set</option><option>Admin Office</option><option>Mayor's Office</option><option>Budget Office</option>
-          <option>Accounting Office</option><option>Engineering Office</option><option>Treasurer's Office</option>
-          <option>GSO</option><option>RHU</option><option>Civil Registrar</option><option>HR</option>
-          <option>Municipal Planning & Dev. Office</option><option>LDRRMO</option><option>PNP Office</option>
-          <option>BFP Office</option><option>Motorpool</option><option>DSWD</option><option>MSWD</option>
-          <option>Water System</option><option>Market Office</option>
-        </select>
+        <input id="addEqLocation" readonly placeholder="Auto-set from personnel's office" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text-dark);font-size:0.82rem;cursor:default">
+        <div style="font-size:0.63rem;color:var(--text-light);margin-top:3px">Automatically set from the personnel's office.</div>
       </div>
       <div class="modal-form-row" style="grid-column:1/-1"><label>⚙️ Status</label>
         <select id="addEqStatus" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text-dark);font-size:0.82rem">

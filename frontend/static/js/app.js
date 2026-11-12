@@ -3020,7 +3020,8 @@ function openAddEquipmentModal(staffId){
   if(addIdEl)addIdEl.dataset.auto='1';
   document.getElementById('addEqStatus').value='Serviceable';
   const defaultLocation=officeNameForDept(staffDeptId)||officeNameForDept(currentDeptId)||'Not Set';
-  populateLocationSelect('addEqLocation',defaultLocation);
+  const addLocEl=document.getElementById('addEqLocation');
+  if(addLocEl)addLocEl.value=defaultLocation;
   // Reset category display
   const addCatH=document.getElementById('addEqCategory');
   const addCatD=document.getElementById('addEqCategoryDisplay');
