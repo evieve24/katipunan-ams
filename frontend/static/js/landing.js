@@ -15,7 +15,6 @@
 }());
 
 function enterSystem(){
-  clearTimeout(window._lpAutoTimer);
   var ls=document.getElementById('landingScreen');
   ls.classList.add('fade-out');
   setTimeout(function(){

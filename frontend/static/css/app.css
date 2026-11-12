@@ -145,19 +145,7 @@
 .lp-enter-btn:hover::after { transform:translateX(100%); }
 .lp-enter-btn:hover { transform:translateY(-3px);box-shadow:0 14px 40px rgba(201,168,76,0.55); }
 .lp-enter-btn:active { transform:translateY(0); }
-.lp-progress-wrap {
-  margin-top:18px;opacity:0;
-  animation:fadeIn 0.6s ease 3s forwards;
-  display:flex;flex-direction:column;align-items:center;gap:6px;
-}
-.lp-progress-bar { width:220px;height:2px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden; }
-.lp-progress-fill {
-  height:100%;background:linear-gradient(90deg,#c9a84c,#e8c96d);
-  border-radius:2px;
-  animation:progressFill 5s linear 3s forwards;width:0;
-}
-@keyframes progressFill { from{width:0} to{width:100%} }
-.lp-progress-text { font-size:0.62rem;color:#5a7099;letter-spacing:0.1em;text-transform:uppercase; }
+.lp-progress-text { font-size:0.62rem;color:#5a7099;letter-spacing:0.1em; }
 .lp-particles { position:absolute;inset:0;pointer-events:none;overflow:hidden; }
 .lp-particle {
   position:absolute;border-radius:50%;background:rgba(201,168,76,0.6);

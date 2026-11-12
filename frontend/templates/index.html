@@ -54,7 +54,7 @@
       <div class="lp-feat-pill">☁️ Google Drive &amp; Hard Drive Backup</div>
     </div>
     <button class="lp-enter-btn" onclick="enterSystem()">Enter System &nbsp;›</button>
-    <div class="lp-progress-text" style="margin-top:12px;font-size:0.72rem;letter-spacing:0.08em;color:rgba(255,255,255,0.45);text-transform:uppercase;">Click Enter System to continue</div>
+    <div class="lp-progress-text" style="margin-top:12px;font-size:0.72rem;letter-spacing:0.08em;color:rgba(255,255,255,0.45);">Click Enter System to continue</div>
   </div>
   <div class="lp-caption">Municipality of Katipunan &middot; Zamboanga del Norte &middot; General Services Office</div>
   <div class="lp-bottom-strip"></div>
@@ -543,13 +543,6 @@
         <div id="pfDashBody" class="pf-dash-grid"></div>
         <div id="pfDashNote" class="pf-sub"></div>
       </div>
-      <div class="dash-panel notif-dash-card" id="oicNotificationsCard" style="display:none;margin-bottom:20px">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-          <div class="panel-title" style="margin-bottom:0">🔔 GSO-OIC Notifications <span class="notif-count-pill" id="oicNotifUnread">0</span></div>
-          <button class="pf-btn primary" onclick="toggleNotificationPanel(true)">View all →</button>
-        </div>
-        <div id="oicNotifRecent" class="notif-dash-list"></div>
-      </div>
       <h2 class="section-title">LGU Katipunan — Offices</h2>
       <p class="section-subtitle">Click an office to view departments and personnel</p>
       <div class="staff-grid" id="dashOfficeGrid"></div>
@@ -677,10 +670,6 @@
             <div><div class="setting-label">Current Location</div><div class="setting-sub" id="geoSettingStatus">Not detected</div></div>
             <button class="settings-btn" onclick="requestGeolocation()">Detect</button>
           </div>
-          <div class="setting-row">
-            <div><div class="setting-label">Demo Coordinates</div><div class="setting-sub">Use sample coordinates (labelled demo) when real location is unavailable</div></div>
-            <label class="toggle-switch"><input type="checkbox" id="geoDemoToggle" onchange="setGeoDemo(this.checked)"><span class="toggle-slider"></span></label>
-          </div>
           <div class="setting-row" style="border-top:1px solid var(--border);padding-top:12px;margin-top:8px">
             <div><div class="setting-label">View Activity Log</div><div class="setting-sub">All system actions are recorded here</div></div>
             <button class="settings-btn" onclick="showActivityLog()">View</button>
@@ -761,10 +750,6 @@
             <button class="settings-btn" onclick="showRecycleBin()">View <span id="recycleBinCount" style="background:var(--red);color:#fff;border-radius:10px;padding:1px 6px;font-size:0.65rem;margin-left:4px">0</span></button>
           </div>
           <div class="setting-row" style="border-top:1px solid var(--border);padding-top:12px;margin-top:8px">
-            <div><div class="setting-label">Clear Photo Cache</div><div class="setting-sub">Remove all uploaded photos</div></div>
-            <button class="settings-btn danger" onclick="clearPhotoCache()">Clear</button>
-          </div>
-          <div class="setting-row" style="border-top:1px solid var(--border);padding-top:12px;margin-top:8px">
             <div><div class="setting-label" style="color:var(--red)">Reset System</div><div class="setting-sub">Wipe all data — returns to first-run setup</div></div>
             <button class="settings-btn danger" onclick="resetSystemFull()" style="white-space:nowrap">🗑 Reset</button>
           </div>
@@ -800,7 +785,6 @@
     <div class="view" id="view-reports">
       <button class="back-btn" onclick="goHome()">← Back to Dashboard</button>
       <h2 class="section-title">📊 Reports Center</h2>
-      <p class="section-subtitle">All system reports are generated here — serviceable/unserviceable, by office, overall, PPE, semi-expendable, and procurement forecast</p>
       <div class="reports-grid">
         <div class="report-card" onclick="printReportServiceable()">
           <div class="rc-icon">✅</div>

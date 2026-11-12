@@ -232,9 +232,8 @@ Default Project/
   `scanHistory`.
 - The app tries a high-accuracy fix first, then a network/cell fix. A fix less
   than 90 seconds old is reused so the scan result appears immediately.
-- **Demo coordinates are off by default.** Turn them on only in
-  **Settings → Geolocation → Demo Coordinates**; demo fixes are always labelled
-  `· demo` in the scan result and are never silently substituted.
+- Scans never use fabricated coordinates. If the device location is unavailable,
+  the scan is saved without coordinates.
 - Allow **Location** for the site in the browser and turn on the device's
   location service. On Windows: Settings → Privacy & security → Location.
 - Geolocation, like the camera, needs a secure origin. Use

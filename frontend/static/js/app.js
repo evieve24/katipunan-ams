@@ -587,14 +587,6 @@ function getLocationString(){
 }
 let _scanBusy=false;
 // Reads the device's geolocation at the moment of a scan. Resolves to {lat,lng,acc,at} or null if unavailable/denied.
-// Demo mode is opt-in (Settings → Geolocation). When it is on, sample coordinates near Katipunan are used
-// only if the real device location cannot be read; they are always labelled "demo".
-function geoDemoOn(){try{return localStorage.getItem('mets_geo_demo')==='1';}catch(e){return false;}}
-function setGeoDemo(on){try{localStorage.setItem('mets_geo_demo',on?'1':'0');}catch(e){}showSyncToast(on?'🧪 Demo coordinates ON — only used when real location is unavailable':'📍 Demo coordinates OFF — scans require the real device location');}
-function demoLocation(){
-  const j=()=>(Math.random()-0.5)*0.0006;
-  return {lat:+(8.5216+j()).toFixed(6),lng:+(123.3053+j()).toFixed(6),acc:15,at:new Date().toISOString(),demo:true};
-}
 function getScanLocation(){
   return new Promise(resolve=>{
     const finish=loc=>resolve(loc);
@@ -609,7 +601,7 @@ function getScanLocation(){
         const age=Date.now()-new Date(currentLocation.at).getTime();
         if(age>=0&&age<120000){finish({...currentLocation,at:new Date().toISOString()});return;}
       }
-      finish(geoDemoOn()?demoLocation():null);
+      finish(null);
     };
     if(!navigator.geolocation){fallback();return;}
     const ok=pos=>{
@@ -1167,7 +1159,6 @@ async function onQRScanSuccess(decodedText){
     if(found.eq)queueAssetScan(data.id,scanLoc,'qr_scan',found.eq);
     try{renderScanMonitoring(MODAL_SCAN_SPEC,data.id,scanLoc,found.eq);}catch(e){}
     if(!scanLoc)showSyncToast('📍 Location not captured — allow location access to record where assets are scanned');
-    else if(scanLoc.demo)showSyncToast('🧪 Demo coordinates used for this scan — turn off Demo Coordinates in Settings to require real GPS');
     logAction(`QR scanned: Asset ${data.id||decodedText} — ${data.status||'status unknown'} · ${fmtLoc(scanLoc)}`);
     queueSync('qr_scan',{assetId:data.id,scannedAt:new Date().toISOString(),scannedLat:scanLoc?scanLoc.lat:null,scannedLng:scanLoc?scanLoc.lng:null,scannedAccuracy:scanLoc?scanLoc.acc:null,scannedDemo:!!(scanLoc&&scanLoc.demo),scannedLocation:fmtLoc(scanLoc)});
   }catch(e){
@@ -1941,7 +1932,7 @@ function lightboxFileChanged(input){
 }
 // legacy – keep for any old references
 function viewPhoto(eqId){openPhotoLightbox(eqId);}
-function clearPhotoCache(){if(confirm('Clear all uploaded photos?')){photoStore={};localStorage.removeItem('mets_photos');logAction('Photo cache cleared');alert('Photos cleared.');}}
+
 
 // ══════════════════════════════════════════════════════════
 // EDIT PERSONAL INFO
@@ -2603,7 +2594,6 @@ function bkShowLast(){
   });
 }
 setTimeout(bkShowLast,500);
-setTimeout(()=>{const t=document.getElementById('geoDemoToggle');if(t)t.checked=geoDemoOn();},500);
 
 // Hard drive: lets the user pick the drive/folder when the browser supports it, otherwise downloads the file.
 async function bkSaveToDisk(){
