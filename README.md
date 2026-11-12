@@ -246,6 +246,8 @@ Default Project/
 
 - Both the Mobile Scanner and the desktop QR modal provide a **camera
   selector**, **Start**, **Stop**, **Scan Again**, and **Upload QR image**.
+  The Mobile Scanner also has visible **Close** buttons (topbar and control
+  row) that stop the camera and return to the previous screen or dashboard.
 - Phones and tablets prefer the rear camera (`facingMode: environment`); laptops
   and desktops can select any connected webcam/USB camera.
 - After a scan, the result screen shows the **registered location** and

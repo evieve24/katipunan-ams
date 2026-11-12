@@ -1005,6 +1005,7 @@
                onmouseout="this.style.transform='scale(1)'">
             <i class="ti ti-user" style="color:#fff;font-size:13px;"></i>
           </div>
+          <button type="button" class="sc-close-btn" onclick="closeMobileScanner()" title="Close scanner" aria-label="Close scanner">✕</button>
         </div>
 
         <!-- ② Geo bar inside card -->
@@ -1064,6 +1065,7 @@
           <button type="button" class="scanner-ctrl-btn start" onclick="startMobileQRScan((document.getElementById('msCameraSel')||{}).value||'')">▶ Start</button>
           <button type="button" class="scanner-ctrl-btn stop" onclick="stopMobileCamera()">⏹ Stop</button>
           <button type="button" class="scanner-ctrl-btn again" onclick="resetForNextScan()">🔄 Scan Again</button>
+          <button type="button" class="scanner-ctrl-btn close" onclick="closeMobileScanner()">✕ Close</button>
         </div>
         <input type="file" id="msQRFileInput" accept="image/*" style="display:none" onchange="msScanQRFile(this.files && this.files[0]); this.value='';">
         <div id="msQRFileReader" style="display:none;"></div>

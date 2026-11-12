@@ -1800,6 +1800,14 @@ body:not(.role-oic) .action-btn.delete,body:not(.role-oic) .staff-card .action-b
 }
 #qrScannerModal .camera-select-row{margin:6px 0 4px;}
 .scanner-controls{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;padding:0 14px 8px;}
+.sc-close-btn{
+  width:28px;height:28px;flex-shrink:0;border-radius:50%;
+  background:rgba(192,57,43,.12);border:1px solid rgba(192,57,43,.35);
+  color:#f09595;font-size:14px;line-height:1;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-family:inherit;
+  transition:background .18s,border-color .18s;
+}
+.sc-close-btn:hover{background:rgba(192,57,43,.25);border-color:#c0392b;color:#fff;}
 .scanner-ctrl-btn{
   border-radius:7px;padding:5px 12px;font-size:0.68rem;font-weight:700;
   font-family:inherit;cursor:pointer;border:1px solid var(--border);
@@ -1808,6 +1816,7 @@ body:not(.role-oic) .action-btn.delete,body:not(.role-oic) .staff-card .action-b
 .scanner-ctrl-btn.start{background:rgba(45,125,70,.12);border-color:rgba(45,125,70,.45);color:#2d7d46;}
 .scanner-ctrl-btn.stop{background:rgba(192,57,43,.10);border-color:rgba(192,57,43,.4);color:#c0392b;}
 .scanner-ctrl-btn.again{background:rgba(201,168,76,.12);border-color:rgba(201,168,76,.4);color:var(--gold-dim);}
+.scanner-ctrl-btn.close{background:rgba(192,57,43,.10);border-color:rgba(192,57,43,.4);color:#c0392b;}
 .scan-map-wrap{margin-top:8px;border-radius:10px;overflow:hidden;border:1px solid var(--border);background:var(--bg);}
 .scan-map{width:100%;height:180px;border:0;display:block;background:var(--bg);}
 .scan-map-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}

@@ -4056,6 +4056,19 @@ function _doOpenMobileScanner() {
   if(typeof loadCameraSelectors==='function') loadCameraSelectors();
 }
 
+// Close the mobile scanner and return to the previous screen (or dashboard).
+function closeMobileScanner() {
+  stopMobileQRScan();
+  resetMobileScanUI();
+  try {
+    if (typeof goBack === 'function' && Array.isArray(navStack) && navStack.length > 1) {
+      goBack();
+      return;
+    }
+  } catch (e) {}
+  goHome();
+}
+
 let _officePickerChosen = null;
 
 function officePickerSelect(el, name) {

@@ -148,8 +148,8 @@ notify the OIC as before.
 
 ### UI additions
 
-- Mobile scanner: camera selector, **Start**, **Stop**, **Scan Again** buttons,
-  existing tap-to-scan, image upload, demo scan.
+- Mobile scanner: camera selector, **Start**, **Stop**, **Scan Again**, and
+  **Close** buttons, existing tap-to-scan, image upload, demo scan.
 - Scanner modal: camera selector, **Start**, **Stop**, **Scan Again** buttons,
   image upload.
 - Result screens (mobile and modal): registered vs scanned coordinates,
