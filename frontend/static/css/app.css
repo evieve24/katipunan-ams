@@ -1859,6 +1859,10 @@ body:not(.role-oic) .action-btn.delete,body:not(.role-oic) .staff-card .action-b
   background:rgba(5,10,25,.55);backdrop-filter:blur(2px);
 }
 
+/* Hide the empty scanner surfaces until a camera is actually active. */
+.scanner-card-box:not(.live){display:none!important;}
+#qr-reader:empty{display:none!important;}
+
 @media(max-width:1100px){
   .settings-grid{grid-template-columns:repeat(auto-fill,minmax(250px,1fr));}
 }

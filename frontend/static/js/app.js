@@ -4190,7 +4190,7 @@ function _doOpenMobileScanner() {
   const area = document.getElementById('scannerAreaBox');
   if (area) area.classList.add('ready');
   const hint = document.getElementById('scanHintText');
-  if (hint) hint.textContent = 'Tap the viewfinder to start the camera';
+  if (hint) hint.textContent = 'Press ▶ Start to begin scanning';
   updateStatusTime();
   if(typeof initGeolocation==='function') initGeolocation();
   if(typeof loadCameraSelectors==='function') loadCameraSelectors();
@@ -4761,7 +4761,7 @@ function resetMobileScanUI() {
   const btn = document.getElementById('viewAssetBtn');
   if (btn) { btn.style.opacity = '.4'; btn.style.pointerEvents = 'none'; }
   const hint = document.getElementById('scanHintText');
-  if (hint) hint.textContent = 'Tap the viewfinder to start the camera';
+  if (hint) hint.textContent = 'Press ▶ Start to begin scanning';
   const box = document.getElementById('scannerAreaBox');
   if (box) box.classList.remove('detected');
   const geo = document.getElementById('detectedGeo');
