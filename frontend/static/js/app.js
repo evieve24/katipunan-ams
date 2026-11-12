@@ -4754,6 +4754,65 @@ function resetForNextScan() {
 /* ── CAMERA SCAN (real QR, inline viewfinder) ── */
 let msInlineScanner = null;
 let msInlineScanBusy = false;
+let msFrameSyncTimer = null;
+
+/* Align the gold animation frame with the QR library's white scan box so the
+   gold border and scan line always sit inside the white brackets. */
+function clearMobileScanFrameSync() {
+  if (msFrameSyncTimer) { clearTimeout(msFrameSyncTimer); msFrameSyncTimer = null; }
+  const frame = document.getElementById('scanFrame');
+  if (frame) {
+    frame.style.left = '';
+    frame.style.top = '';
+    frame.style.width = '';
+    frame.style.height = '';
+    frame.style.transform = '';
+  }
+}
+
+function syncMobileScanFrameToQrBox() {
+  const box = document.getElementById('scannerAreaBox');
+  const reader = document.getElementById('msInlineReader');
+  const frame = document.getElementById('scanFrame');
+  if (!box || !reader || !frame || !box.classList.contains('live')) return false;
+  const shaded = reader.querySelector('#qr-shaded-region');
+  if (!shaded) return false;
+  const sr = shaded.getBoundingClientRect();
+  const boxRect = box.getBoundingClientRect();
+  const style = getComputedStyle(shaded);
+  const bl = parseFloat(style.borderLeftWidth) || 0;
+  const br = parseFloat(style.borderRightWidth) || 0;
+  const bt = parseFloat(style.borderTopWidth) || 0;
+  const bb = parseFloat(style.borderBottomWidth) || 0;
+  const innerW = sr.width - bl - br;
+  const innerH = sr.height - bt - bb;
+  if (innerW < 40 || innerH < 40) return false;
+  const inset = 6;
+  const width = Math.max(40, innerW - inset * 2);
+  const height = Math.max(40, innerH - inset * 2);
+  frame.style.left = (sr.left - boxRect.left + bl + inset) + 'px';
+  frame.style.top = (sr.top - boxRect.top + bt + inset) + 'px';
+  frame.style.width = width + 'px';
+  frame.style.height = height + 'px';
+  frame.style.transform = 'none';
+  return true;
+}
+
+function scheduleMobileScanFrameSync() {
+  if (msFrameSyncTimer) { clearTimeout(msFrameSyncTimer); msFrameSyncTimer = null; }
+  const run = (attempt) => {
+    if (syncMobileScanFrameToQrBox()) { msFrameSyncTimer = null; return; }
+    if (attempt < 20 && msInlineScanner) {
+      msFrameSyncTimer = setTimeout(() => run(attempt + 1), 100);
+    } else {
+      msFrameSyncTimer = null;
+    }
+  };
+  run(0);
+}
+
+window.addEventListener('resize', () => { if (msInlineScanner) scheduleMobileScanFrameSync(); });
+window.addEventListener('orientationchange', () => { if (msInlineScanner) scheduleMobileScanFrameSync(); });
 
 function resetMobileScanUI() {
   const banner = document.getElementById('scanDetected');
@@ -4774,6 +4833,7 @@ function stopMobileQRScan() {
     msInlineScanner = null;
   }
   msInlineScanBusy = false;
+  if (typeof clearMobileScanFrameSync === 'function') clearMobileScanFrameSync();
   const box = document.getElementById('scannerAreaBox');
   if (box) box.classList.remove('live');
   const reader = document.getElementById('msInlineReader');
@@ -4834,6 +4894,7 @@ async function startMobileQRScan(deviceId) {
         return null;
       }
       if (hint) hint.textContent = 'Point the camera at the asset QR tag';
+      scheduleMobileScanFrameSync();
       return scanner;
     } catch (err) {
       lastError = err;
