@@ -556,6 +556,7 @@ require `Authorization: Bearer <token>`.
 - Reports, CSV export, activity log, recycle bin.
 - Role-based permissions (GSO-OIC, Inspectorate, GSO Staff, Office Head).
 - Dark mode, search, backup/restore, sync center.
+- Search totals and an asset-type summary showing how many laptops, desktops, printers, chairs, and other equipment types are on record.
 - Server-side authentication, audit trail, and account administration.
 - **GSO-OIC notifications** for asset actions with real-time updates, read/unread status, and full previous/updated details.
 - Offline support and installable PWA (reads the last synced copy).

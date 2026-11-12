@@ -2117,6 +2117,113 @@ function renderEquipmentMaster(){
 // ══════════════════════════════════════════════════════════
 // SEARCH
 // ══════════════════════════════════════════════════════════
+const ASSET_TYPE_RULES=[
+  {re:/\b(chair|stool|bench)\b/,label:'Chair',term:'chair'},
+  {re:/\b(table|desk|counter)\b/,label:'Table / Desk',term:'table'},
+  {re:/\b(cabinet|locker|shelv(?:e|es|ing)|rack)\b/,label:'Cabinet / Shelving',term:'cabinet'},
+  {re:/\b(laptop|notebook)\b/,label:'Laptop',term:'laptop'},
+  {re:/\b(desktop|system unit|personal computer|computer|pc)\b/,label:'Desktop',term:'desktop'},
+  {re:/\b(printer|plotter)\b/,label:'Printer',term:'printer'},
+  {re:/\b(scanner)\b/,label:'Scanner',term:'scanner'},
+  {re:/\b(photocopier|copier|xerox)\b/,label:'Photocopier',term:'photocopier'},
+  {re:/\b(projector)\b/,label:'Projector',term:'projector'},
+  {re:/\b(monitor)\b/,label:'Monitor',term:'monitor'},
+  {re:/\b(keyboard)\b/,label:'Keyboard',term:'keyboard'},
+  {re:/\b(mouse)\b/,label:'Mouse',term:'mouse'},
+  {re:/\b(ups|uninterruptible power supply)\b/,label:'UPS',term:'ups'},
+  {re:/\b(router|switch|modem|access point|network)\b/,label:'Network Equipment',term:'network'},
+  {re:/\b(telephone|phone|cellphone|mobile)\b/,label:'Telephone',term:'telephone'},
+  {re:/\b(radio|two-way)\b/,label:'Radio',term:'radio'},
+  {re:/\b(calculator)\b/,label:'Calculator',term:'calculator'},
+  {re:/\b(typewriter)\b/,label:'Typewriter',term:'typewriter'},
+  {re:/\b(refrigerator|fridge|freezer)\b/,label:'Refrigerator',term:'refrigerator'},
+  {re:/\b(television|tv)\b/,label:'Television',term:'television'},
+  {re:/\b(cctv|camera|webcam)\b/,label:'Camera / CCTV',term:'camera'},
+  {re:/\b(fire extinguisher)\b/,label:'Fire Extinguisher',term:'fire extinguisher'},
+  {re:/\b(generator|genset)\b/,label:'Generator Set',term:'generator'},
+  {re:/\b(motorcycle|vehicle|truck|van|car|ambulance)\b/,label:'Vehicle',term:'vehicle'},
+  {re:/\b(water dispenser|dispenser)\b/,label:'Water Dispenser',term:'water dispenser'},
+  {re:/\b(pa system|sound system|amplifier|speaker)\b/,label:'PA / Sound System',term:'sound system'},
+  {re:/\b(air\s*con(?:ditioner|ditioning)?)\b/,label:'Air Conditioner',term:'air conditioner'},
+  {re:/\b(electric fan|fan)\b/,label:'Electric Fan',term:'fan'}
+];
+const ASSET_TYPE_PLURALS={
+  'Laptop':'Laptops','Desktop':'Desktops','Printer':'Printers','Scanner':'Scanners',
+  'Photocopier':'Photocopiers','Chair':'Chairs','Table / Desk':'Tables / Desks',
+  'Cabinet / Shelving':'Cabinets / Shelving','Air Conditioner':'Air Conditioners',
+  'Electric Fan':'Electric Fans','Projector':'Projectors','Monitor':'Monitors',
+  'Keyboard':'Keyboards','Mouse':'Mice','UPS':'UPS units',
+  'Network Equipment':'Network Equipment','Telephone':'Telephones','Radio':'Radios',
+  'Calculator':'Calculators','Typewriter':'Typewriters','Refrigerator':'Refrigerators',
+  'Television':'Televisions','Camera / CCTV':'Cameras / CCTV',
+  'Fire Extinguisher':'Fire Extinguishers','Generator Set':'Generator Sets',
+  'Vehicle':'Vehicles','Water Dispenser':'Water Dispensers',
+  'PA / Sound System':'PA / Sound Systems'
+};
+function assetTypeInfo(eq){
+  const raw=String((eq&&eq.name)||'').trim();
+  const name=raw.toLowerCase();
+  for(const rule of ASSET_TYPE_RULES){
+    if(rule.re.test(name))return {label:rule.label,term:rule.term};
+  }
+  if(!raw)return {label:'Unspecified',term:''};
+  return {label:raw.replace(/\s+/g,' ').replace(/\b[a-z]/g,c=>c.toUpperCase()),term:raw};
+}
+function pluralAssetType(label,count){
+  if(count===1)return label;
+  return ASSET_TYPE_PLURALS[label]||(/[^s]$/i.test(label)?label+'s':label);
+}
+function assetTypeSummary(assets){
+  const byType=new Map();
+  (assets||[]).forEach(eq=>{
+    const info=assetTypeInfo(eq);
+    const row=byType.get(info.label)||{label:info.label,term:info.term,count:0};
+    row.count+=1;
+    byType.set(info.label,row);
+  });
+  return Array.from(byType.values()).sort((a,b)=>b.count-a.count||a.label.localeCompare(b.label));
+}
+function searchResultHeadline(results,query,equipmentMatches){
+  const eqCount=equipmentMatches.length,total=results.length;
+  if(!total&&!eqCount)return `No results for "${query}"`;
+  if(!eqCount)return `${total} result${total===1?'':'s'} for "${query}" · no matching assets`;
+  const types=assetTypeSummary(equipmentMatches);
+  if(types.length===1){
+    const text=`${eqCount} ${pluralAssetType(types[0].label,eqCount)} found for "${query}"`;
+    return text+(total!==eqCount?` · ${total} total results`:'');
+  }
+  const parts=types.slice(0,3).map(t=>`${t.count} ${pluralAssetType(t.label,t.count)}`);
+  const extra=types.length>3?` + ${types.length-3} more type${types.length-3===1?'':'s'}`:'';
+  return `${eqCount} asset${eqCount===1?'':'s'} found for "${query}"${parts.length?` · ${parts.join(', ')}${extra}`:''}${total!==eqCount?` · ${total} total results`:''}`;
+}
+function renderSearchAssetSummary(assets,matchedLabels){
+  const el=document.getElementById('searchAssetSummary');
+  if(!el)return;
+  const rows=assetTypeSummary(assets);
+  if(!rows.length){
+    el.innerHTML='<div class="asset-summary-empty">No assets recorded yet.</div>';
+    return;
+  }
+  const matched=new Set(matchedLabels||[]);
+  el.innerHTML=`<div class="asset-summary-head">
+      <div class="asset-summary-title">📦 Asset Inventory by Type</div>
+      <div class="asset-summary-total">${assets.length} asset${assets.length===1?'':'s'} total</div>
+    </div>
+    <div class="asset-type-grid">${rows.map(row=>`
+      <button type="button" class="asset-type-card${matched.has(row.label)?' matched':''}" data-term="${dashEsc(row.term)}" title="Show ${dashEsc(pluralAssetType(row.label,row.count))}">
+        <span class="at-count">${row.count}</span>
+        <span class="at-label">${dashEsc(pluralAssetType(row.label,row.count))}</span>
+      </button>`).join('')}</div>`;
+  el.querySelectorAll('.asset-type-card[data-term]').forEach(card=>{
+    card.addEventListener('click',()=>{
+      const term=card.dataset.term;
+      if(!term)return;
+      const input=document.getElementById('searchInput');
+      if(input)input.value=term;
+      handleSearch(term);
+    });
+  });
+}
 function handleSearch(val){
   document.getElementById('searchClearBtn').style.display=val?'inline':'none';
   if(!val.trim()){clearSearch(false);return;}
@@ -2127,15 +2234,20 @@ function clearSearch(resetInput=true){
   goHome();
 }
 function performSearch(query){
-  const q=query.toLowerCase(),results=[];
+  const q=query.toLowerCase(),results=[],equipmentMatches=[];
   for(const[deptId,list]of Object.entries(staffData)){
     if(!Array.isArray(list))continue;
     for(const s of list){
-      if(s.name.toLowerCase().includes(q)||s.pos.toLowerCase().includes(q))
-        results.push({type:'staff',icon:'👤',name:s.name,meta:`${s.pos} · ${deptId.replace(/_/g,' ')}`,action:()=>{showStaff(deptId);setTimeout(()=>showProfile(s),150);}});
-      if(s.equipment)for(const eq of s.equipment){
-        if(eq.name.toLowerCase().includes(q)||eq.brand.toLowerCase().includes(q)||eq.serial.toLowerCase().includes(q)||eq.id.toLowerCase().includes(q))
-          results.push({type:'equipment',icon:'🖥️',name:eq.name,meta:`${eq.id} · ${eq.brand} · S/N ${eq.serial} · ${s.name}`,badge:eq.status,action:()=>{showStaff(deptId);setTimeout(()=>showProfile(s),150);}});
+      const staffName=String(s.name||''),staffPos=String(s.pos||'');
+      if(staffName.toLowerCase().includes(q)||staffPos.toLowerCase().includes(q))
+        results.push({type:'staff',icon:'👤',name:staffName,meta:`${staffPos} · ${deptId.replace(/_/g,' ')}`,action:()=>{showStaff(deptId);setTimeout(()=>showProfile(s),150);}});
+      for(const eq of (s.equipment||[])){
+        const eqName=String(eq.name||''),eqBrand=String(eq.brand||''),eqSerial=String(eq.serial||''),eqId=String(eq.id||'');
+        const typeInfo=assetTypeInfo(eq);
+        if(eqName.toLowerCase().includes(q)||eqBrand.toLowerCase().includes(q)||eqSerial.toLowerCase().includes(q)||eqId.toLowerCase().includes(q)||typeInfo.label.toLowerCase().includes(q)||typeInfo.term.toLowerCase().includes(q)){
+          equipmentMatches.push(eq);
+          results.push({type:'equipment',icon:'🖥️',name:eqName||'Unnamed asset',meta:`${eqId} · ${eqBrand} · S/N ${eqSerial} · ${staffName}`,badge:eq.status,action:()=>{showStaff(deptId);setTimeout(()=>showProfile(s),150);}});
+        }
       }
     }
   }
@@ -2146,20 +2258,24 @@ function performSearch(query){
   }
   for(const[oid,od]of Object.entries(officeData)){
     const grpLabel=officeGroupLabel[oid]||'LGU Office';
-    if(od.name.toLowerCase().includes(q))results.push({type:'dept',icon:od.icon||'🏢',name:od.name,meta:`${grpLabel} · ${od.depts.length} dept${od.depts.length!==1?'s':''}`,action:()=>showOfficeDept(oid)});
-    for(const d of od.depts)if(d.name.toLowerCase().includes(q)||d.desc.toLowerCase().includes(q))
+    if(String(od.name||'').toLowerCase().includes(q))results.push({type:'dept',icon:od.icon||'🏢',name:od.name,meta:`${grpLabel} · ${od.depts.length} dept${od.depts.length!==1?'s':''}`,action:()=>showOfficeDept(oid)});
+    for(const d of od.depts)if(String(d.name||'').toLowerCase().includes(q)||String(d.desc||'').toLowerCase().includes(q))
       results.push({type:'dept',icon:d.icon||'📁',name:d.name,meta:`${od.name} · ${d.desc}`,action:()=>showStaff(d.id)});
   }
-  renderSearchResults(results,query);
+  renderSearchResults(results,query,equipmentMatches);
   showView('search');
   setBreadcrumb([{label:'Dashboard',fn:'goHome()'},{label:`Search: "${query}"`}]);
   logAction(`Searched: "${query}" — ${results.length} results`);
 }
 function highlight(text,q){return text.replace(new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'),'<mark>$1</mark>');}
-function renderSearchResults(results,query){
-  document.getElementById('searchResultsCount').textContent=results.length?`${results.length} result${results.length!==1?'s':''} for "${query}"`:'' ;
+function renderSearchResults(results,query,equipmentMatches){
+  const matches=equipmentMatches||results.filter(r=>r.type==='equipment');
+  let allAssets=[];
+  try{allAssets=getAllEquipment();}catch(e){allAssets=[];}
+  renderSearchAssetSummary(allAssets,matches.map(eq=>assetTypeInfo(eq).label));
+  document.getElementById('searchResultsCount').textContent=results.length?searchResultHeadline(results,query,matches):'';
   const list=document.getElementById('searchResultsList');
-  if(!results.length){list.innerHTML=`<div class="search-no-results"><div class="sn-icon">🔍</div><p>No results for "<strong>${query}</strong>"</p><p style="font-size:0.75rem;margin-top:6px;color:var(--text-light)">Try staff name, equipment, serial number, or office.</p></div>`;return;}
+  if(!results.length){list.innerHTML=`<div class="search-no-results"><div class="sn-icon">🔍</div><p>No results for "<strong>${dashEsc(query)}</strong>"</p><p style="font-size:0.75rem;margin-top:6px;color:var(--text-light)">Try staff name, equipment, serial number, or office.</p></div>`;return;}
   list.innerHTML=results.map((r,i)=>`<div class="search-result-item" onclick="window._srAct[${i}]()">
     <span class="sr-icon">${r.icon}</span>
     <div class="sr-info"><div class="sr-name">${highlight(r.name,query)}</div><div class="sr-meta">${highlight(r.meta,query)}</div></div>
