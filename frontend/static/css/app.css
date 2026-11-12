@@ -1256,7 +1256,7 @@ mark{background:#fff3cd;color:var(--navy);border-radius:2px;padding:0 2px;}
   align-items:center;gap:5px;white-space:nowrap;z-index:10;
   backdrop-filter:blur(4px);
 }
-.scanner-card-box.ready .scanner-live-badge{display:flex;}
+.scanner-card-box.live .scanner-live-badge{display:flex;}
 .slb-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:pulseDot 1.2s ease infinite;flex-shrink:0;}
 /* Tap hint */
 .scanner-tap-hint{

@@ -943,6 +943,32 @@ window.addEventListener('offline',()=>{
 // ══════════════════════════════════════════════════════════
 let html5QrScanner=null;
 
+function cameraErrorMessage(err){
+  const name=(err&&err.name)||'';
+  if(!window.isSecureContext)return 'Camera requires localhost or HTTPS. Open the app at http://localhost:8080 or use HTTPS.';
+  if(name==='NotAllowedError'||name==='PermissionDeniedError'||name==='SecurityError')return 'Camera permission denied. Allow camera access for this site, then press Start again.';
+  if(name==='NotFoundError'||name==='DevicesNotFoundError')return 'No camera found. Connect a webcam or use Upload QR image.';
+  if(name==='NotReadableError'||name==='TrackStartError')return 'The camera is in use by another app. Close Teams/Zoom/Camera, then press Start again.';
+  if(name==='OverconstrainedError')return 'The selected camera is unavailable. Choose another camera and press Start.';
+  return 'Camera unavailable. Allow camera permission, close other camera apps, or use Upload QR image.';
+}
+function qrCameraCandidates(selectId){
+  const list=[];
+  const seen=new Set();
+  const add=(cfg,key)=>{if(cfg&&!seen.has(key)){seen.add(key);list.push(cfg);}};
+  const selected=((document.getElementById(selectId)||{}).value)||localStorage.getItem('mets_camera_id')||'';
+  if(selected)add({deviceId:{exact:selected}},'id:'+selected);
+  const mobile=/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent||'');
+  if(mobile)add({facingMode:{ideal:'environment'}},'env');
+  (window._availableCameras||[]).forEach(cam=>{
+    if(cam&&cam.id&&cam.id!==selected)add({deviceId:{exact:cam.id}},'id:'+cam.id);
+  });
+  if(!mobile)add({facingMode:{ideal:'environment'}},'env');
+  add({facingMode:{ideal:'user'}},'user');
+  add({facingMode:'environment'},'env2');
+  add({facingMode:'user'},'user2');
+  return list;
+}
 function openQRScanner(target){
   window._qrScanTarget=target||'modal';
   document.getElementById('qrScannerModal').classList.add('open');
@@ -952,55 +978,77 @@ function openQRScanner(target){
   document.getElementById('qrScanError').style.display='none';
   document.getElementById('qrScanError').textContent='';
   _scanBusy=false;
-  loadCameraSelectors();
   if((target||'modal')==='modal' && navigator.geolocation){
     // Prime the device location when the scanner opens so the scan can record
     // a real fix immediately instead of waiting mid-scan.
     try{getScanLocation();}catch(e){}
   }
   clearTimeout(window._qrStartTimer);
-  window._qrStartTimer=setTimeout(()=>{
-    if(typeof Html5Qrcode==='undefined'){
-      document.getElementById('qrScanError').style.display='block';
-      document.getElementById('qrScanError').textContent='QR scanner library not loaded. Reopen the app to load it.';
-      return;
-    }
-    if(html5QrScanner){try{html5QrScanner.stop();}catch(e){}html5QrScanner=null;}
-    document.getElementById('qr-reader').innerHTML='';
-    html5QrScanner=new Html5Qrcode('qr-reader');
-    const camId=((document.getElementById('qrCameraSel')||{}).value)||localStorage.getItem('mets_camera_id')||'';
-    html5QrScanner.start(
-      camId?{deviceId:{exact:camId}}:{facingMode:{ideal:'environment'}},
-      {fps:10,qrbox:{width:220,height:220}},
-      onQRScanSuccess,
-      ()=>{}
-    ).catch(err=>{
-      if(camId){
-        try{localStorage.removeItem('mets_camera_id');const s=document.getElementById('qrCameraSel');if(s)s.value='';}catch(e){}
-        setTimeout(()=>openQRScanner('modal'),200);
-        return;
+  window._qrStartTimer=setTimeout(()=>{startModalScanner();},250);
+}
+async function startModalScanner(){
+  const errEl=document.getElementById('qrScanError');
+  if(typeof Html5Qrcode==='undefined'){
+    if(errEl){errEl.style.display='block';errEl.textContent='QR scanner library not loaded. Reopen the app to load it.';}
+    return null;
+  }
+  if(!window.isSecureContext){
+    if(errEl){errEl.style.display='block';errEl.textContent=cameraErrorMessage(null);}
+    return null;
+  }
+  if(errEl){errEl.style.display='block';errEl.textContent='Requesting camera…';}
+  const reader=document.getElementById('qr-reader');
+  if(html5QrScanner){try{await html5QrScanner.stop();}catch(e){}html5QrScanner=null;}
+  await loadCameraSelectors();
+  let lastError=null;
+  for(const cfg of qrCameraCandidates('qrCameraSel')){
+    if(!document.getElementById('qrScannerModal').classList.contains('open'))return null;
+    if(reader)reader.innerHTML='';
+    const scanner=new Html5Qrcode('qr-reader');
+    html5QrScanner=scanner;
+    try{
+      await scanner.start(
+        cfg,
+        {fps:15,qrbox:(w,h)=>{const s=Math.max(180,Math.floor(Math.min(w,h)*0.72));return{width:s,height:s};},aspectRatio:1.0,disableFlip:false},
+        onQRScanSuccess,
+        ()=>{}
+      );
+      if(!document.getElementById('qrScannerModal').classList.contains('open')){
+        try{await scanner.stop();}catch(e){}
+        if(html5QrScanner===scanner)html5QrScanner=null;
+        return null;
       }
-      document.getElementById('qrScanError').style.display='block';
-      document.getElementById('qrScanError').textContent='Camera access denied or unavailable. You can scan a QR image below instead.';
-    });
-  },300);
+      if(errEl){errEl.style.display='none';errEl.textContent='';}
+      return scanner;
+    }catch(err){
+      lastError=err;
+      if(html5QrScanner===scanner)html5QrScanner=null;
+      try{await scanner.stop();}catch(e){}
+      try{scanner.clear();}catch(e){}
+    }
+  }
+  if(errEl){errEl.style.display='block';errEl.textContent=cameraErrorMessage(lastError);}
+  return null;
 }
 
 async function loadCameraSelectors(){
   if(typeof Html5Qrcode==='undefined'||typeof Html5Qrcode.getCameras!=='function')return;
   try{
     const cams=await Html5Qrcode.getCameras();
+    window._availableCameras=cams||[];
     const saved=(()=>{try{return localStorage.getItem('mets_camera_id')||'';}catch(e){return'';}})();
     ['qrCameraSel','msCameraSel'].forEach(id=>{
       const sel=document.getElementById(id);if(!sel)return;
       const current=sel.value||saved;
-      sel.innerHTML='<option value="">Auto (rear camera on mobile)</option>'+cams.map((c,i)=>{
+      sel.innerHTML='<option value="">Auto (default / rear camera)</option>'+cams.map((c,i)=>{
         const label=String(c.label||('Camera '+(i+1))).replace(/</g,'&lt;').replace(/>/g,'&gt;');
         return '<option value="'+c.id+'">'+label+'</option>';
       }).join('');
       if(current&&cams.some(c=>c.id===current))sel.value=current;
     });
-  }catch(e){/* permission denied or no camera list */}
+  }catch(e){
+    window._availableCameras=window._availableCameras||[];
+  }
 }
 function restartQRScannerCamera(deviceId){
   if(deviceId){try{localStorage.setItem('mets_camera_id',deviceId);}catch(e){}}
@@ -4596,7 +4644,7 @@ function pickOffice(el, name) {
   resetMobileScanUI();
 }
 function viewAsset() {
-  if (!selectedOffice) return;
+  if (!scannedAsset || !scannedAsset.id) return;
   stopMobileQRScan();
   goTo('step-result');
 }
@@ -4642,53 +4690,73 @@ function stopMobileQRScan() {
   }
 }
 
-function startMobileQRScan(deviceId) {
-  if (!selectedOffice) {
-    ms_showToast('📍 Please select an office first');
-    return;
-  }
+async function startMobileQRScan(deviceId) {
   if (typeof Html5Qrcode === 'undefined') {
     ms_showToast('QR scanner library not loaded');
-    return;
+    return null;
   }
-  if (msInlineScanner) return;
+  if (!window.isSecureContext) {
+    const secureMsg = cameraErrorMessage(null);
+    const secureHint = document.getElementById('scanHintText');
+    if (secureHint) secureHint.textContent = secureMsg;
+    ms_showToast('📷 ' + secureMsg);
+    return null;
+  }
+  if (msInlineScanner) return msInlineScanner;
   const box = document.getElementById('scannerAreaBox');
   const reader = document.getElementById('msInlineReader');
-  if (!box || !reader) return;
+  if (!box || !reader) return null;
   resetMobileScanUI();
   box.classList.add('live', 'ready');
-  reader.innerHTML = '';
   const hint = document.getElementById('scanHintText');
-  if (hint) hint.textContent = 'Point the camera at the asset QR tag';
-  msInlineScanner = new Html5Qrcode('msInlineReader');
+  if (hint) hint.textContent = 'Requesting camera…';
+  if (deviceId) {
+    try {
+      const select = document.getElementById('msCameraSel');
+      if (select) select.value = deviceId;
+    } catch (e) {}
+  }
+  await loadCameraSelectors();
   msInlineScanBusy = false;
-  const camId = deviceId || ((document.getElementById('msCameraSel') || {}).value || '') || localStorage.getItem('mets_camera_id') || '';
-  msInlineScanner.start(
-    camId ? { deviceId: { exact: camId } } : { facingMode: { ideal: 'environment' } },
-    { fps: 10, qrbox: { width: 160, height: 160 } },
-    (text) => {
-      if (msInlineScanBusy) return;
-      msInlineScanBusy = true;
-      stopMobileQRScan();
-      onQRDecoded(text);
-    },
-    () => {}
-  ).catch((err) => {
-    stopMobileQRScan();
-    if (camId) {
-      try {
-        localStorage.removeItem('mets_camera_id');
-        const select = document.getElementById('msCameraSel');
-        if (select) select.value = '';
-      } catch (e) {}
-      startMobileQRScan('');
-      return;
+  let lastError = null;
+  for (const cfg of qrCameraCandidates('msCameraSel')) {
+    if (!document.getElementById('view-mobilescanner')?.classList.contains('active')) return null;
+    reader.innerHTML = '';
+    const scanner = new Html5Qrcode('msInlineReader');
+    msInlineScanner = scanner;
+    try {
+      await scanner.start(
+        cfg,
+        { fps: 15, qrbox: (w, h) => { const s = Math.max(140, Math.floor(Math.min(w, h) * 0.72)); return { width: s, height: s }; }, aspectRatio: 1.0, disableFlip: false },
+        (text) => {
+          if (msInlineScanBusy) return;
+          msInlineScanBusy = true;
+          stopMobileQRScan();
+          onQRDecoded(text);
+        },
+        () => {}
+      );
+      if (!document.getElementById('view-mobilescanner')?.classList.contains('active')) {
+        try { await scanner.stop(); } catch (e) {}
+        if (msInlineScanner === scanner) msInlineScanner = null;
+        return null;
+      }
+      if (hint) hint.textContent = 'Point the camera at the asset QR tag';
+      return scanner;
+    } catch (err) {
+      lastError = err;
+      if (msInlineScanner === scanner) msInlineScanner = null;
+      try { await scanner.stop(); } catch (e) {}
+      try { scanner.clear(); } catch (e) {}
     }
-    const hint = document.getElementById('scanHintText');
-    if (hint) hint.textContent = 'Camera unavailable — upload an image or use demo scan';
-    ms_showToast('📷 Camera unavailable — upload a QR image or use demo scan');
-    logAction('Camera scan unavailable: ' + (err && err.message ? err.message : err));
-  });
+  }
+  stopMobileQRScan();
+  box.classList.remove('live');
+  const message = cameraErrorMessage(lastError);
+  if (hint) hint.textContent = message;
+  ms_showToast('📷 ' + message);
+  logAction('Camera scan unavailable: ' + (lastError && lastError.message ? lastError.message : lastError));
+  return null;
 }
 
 function msChooseQRImage() {
