@@ -40,6 +40,17 @@ role and sign in with one of the accounts below.
 The server prints the URL and the MariaDB connection on startup. It creates the
 `katipunan_ams` database and its tables automatically on first run.
 
+To create or verify the database manually, import the complete installation
+script (it is safe to re-run; all tables use `IF NOT EXISTS`):
+
+```powershell
+C:\xampp\mysql\bin\mysql.exe -u root < docs\katipunan_ams_install.sql
+```
+
+Or open **phpMyAdmin → Import → `docs/katipunan_ams_install.sql`**. The script
+creates `katipunan_ams` with the `utf8mb4_unicode_ci` collation and all 17
+tables. Default login accounts are seeded by the Python server on first start.
+
 ### Sign-in accounts (seeded on first run)
 
 | Username | Password | Role | Access |
@@ -110,6 +121,7 @@ Default Project/
 ├── docs/
 │   ├── ERD.md               # Applied ERD, table map, and Mermaid diagram
 │   ├── SCANNER_GEOLOCATION.md  # Scanner, GPS, map, offline queue, and scan-history design
+│   ├── katipunan_ams_install.sql  # Complete CREATE DATABASE + table installation script
 │   └── katipunan_ams_schema.sql  # Generated MariaDB schema (no data)
 ├── .env.example             # Copy to .env to change HOST/PORT/database settings
 ├── .gitignore
@@ -153,6 +165,7 @@ Default Project/
 | `frontend/static/images/icons/` | App icons (192px, 512px, maskable 512px). |
 | `docs/ERD.md` | Applied ERD: entities, physical tables, relationships, and diagram. |
 | `docs/SCANNER_GEOLOCATION.md` | Scanner, camera selection, GPS, maps, PWA offline queue, database, and testing details. |
+| `docs/katipunan_ams_install.sql` | Complete installation script: creates `katipunan_ams` and all 17 tables; safe to re-run. |
 | `docs/katipunan_ams_schema.sql` | Generated DDL for the live schema (tables, keys, foreign keys). |
 | `pyproject.toml` | Black/Ruff configuration for the Python backend. |
 | `start.bat` | One-click Windows launcher. |
