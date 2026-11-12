@@ -120,10 +120,10 @@ Default Project/
 │   └── uploads/             # Reserved for uploaded files
 ├── docs/
 │   ├── ERD.md               # Applied ERD, table map, and Mermaid diagram
-│   ├── DFD_MAPPING.md       # Implemented DFD, D0-D14 stores, processes, and table mapping
+│   ├── DFD_MAPPING.md       # Implemented DFD, D1-D14 stores, processes, and table mapping
 │   ├── DFD_DIAGRAM.md       # Visual updated DFD (core + final-system extensions)
 │   ├── SCANNER_GEOLOCATION.md  # Scanner, GPS, map, offline queue, and scan-history design
-│   ├── dfd_views.sql        # DFD-named read-only views (D0-D14)
+│   ├── dfd_views.sql        # DFD-named read-only views (D1-D14)
 │   ├── katipunan_ams_install.sql  # Complete CREATE DATABASE + table + view installation script
 │   └── katipunan_ams_schema.sql  # Generated MariaDB schema (no data)
 ├── .env.example             # Copy to .env to change HOST/PORT/database settings
@@ -167,10 +167,10 @@ Default Project/
 | `frontend/static/sw.js` | Service worker: offline shell; API calls are never cached. |
 | `frontend/static/images/icons/` | App icons (192px, 512px, maskable 512px). |
 | `docs/ERD.md` | Applied ERD: entities, physical tables, relationships, and diagram. |
-| `docs/DFD_MAPPING.md` | Implemented DFD: actors, processes 1.0–14.0, data stores D0–D14, and physical-table mapping. |
+| `docs/DFD_MAPPING.md` | Implemented DFD: actors, processes 1.0–14.0, data stores D1–D14, and physical-table mapping. |
 | `docs/DFD_DIAGRAM.md` | Visual updated DFD: core D1–D11 plus the D12–D14 final-system extensions. |
 | `docs/SCANNER_GEOLOCATION.md` | Scanner, camera selection, GPS, maps, PWA offline queue, database, and testing details. |
-| `docs/dfd_views.sql` | Read-only views named after the DFD data stores (`D0_Application_State` … `D14_Sync_Data`). |
+| `docs/dfd_views.sql` | Read-only views named after the DFD data stores (`D1_User_Data` … `D14_Sync_Data`). |
 | `docs/katipunan_ams_install.sql` | Complete installation script: creates `katipunan_ams`, all 17 tables, and the DFD views; safe to re-run. |
 | `docs/katipunan_ams_schema.sql` | Generated DDL for the live schema (tables, keys, foreign keys). |
 | `pyproject.toml` | Black/Ruff configuration for the Python backend. |
@@ -398,14 +398,17 @@ The implemented DFD is documented in
 D1–D11 and adds D12 Scan & Location, D13 Notifications, and D14 Sync, plus
 Processes 4.1, 12.0, 13.0, and 14.0.
 
-The physical tables keep their names. Fifteen read-only views expose the same
+The physical tables keep their names. Fourteen read-only views expose the same
 data under the DFD store names:
 
-`D0_Application_State`, `D1_User_Data`, `D2_Asset_Data`, `D3_Borrow_Data`,
+`D1_User_Data`, `D2_Asset_Data`, `D3_Borrow_Data`,
 `D4_Inventory_Data`, `D5_Asset_Transfer_Data`, `D6_Asset_Life_Cycle_Data`,
 `D7_Forecasting_Data`, `D8_Maintenance_Data`, `D9_Report_Data`,
 `D10_Activity_Logs_Data`, `D11_Backup_Data`, `D12_Scan_Location_Data`,
 `D13_Notification_Data`, `D14_Sync_Data`.
+
+`app_state` is **not a DFD data store** — it is the backend JSON snapshot that
+projects into D2–D10, so there is no D0 view.
 
 Apply them with:
 

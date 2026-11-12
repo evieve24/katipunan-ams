@@ -5,6 +5,9 @@ final-system additions **D12 Scan & Location**, **D13 Notifications**, and
 **D14 Sync**. The numbered processes follow the original diagram; Processes
 4.1, 12.0, 13.0, and 14.0 are the implemented extensions.
 
+`app_state` is not a DFD data store. It is the backend’s JSON snapshot that
+projects into D2–D10; the logical DFD contains only D1–D14.
+
 ## Core DFD (original D1–D11)
 
 ```mermaid
@@ -93,7 +96,6 @@ flowchart LR
   end
 
   subgraph D[Referenced Stores]
-    D0[(D0 Application State)]
     D1[(D1 User Data)]
     D2[(D2 Asset Data)]
     D4[(D4 Inventory Data)]
@@ -124,17 +126,12 @@ flowchart LR
   OIC --> P11
   P11 --> D11
   P11 --> GD
-
-  D0 -.-> D2
-  D0 -.-> D4
-  D0 -.-> D10
 ```
 
 ## Data-store map
 
 | DFD store | Physical table(s) | View |
 | --- | --- | --- |
-| D0 Application State | `app_state` | `D0_Application_State` |
 | D1 User Data | `users`, `sessions` | `D1_User_Data` |
 | D2 Asset Data | `assets` | `D2_Asset_Data` |
 | D3 Borrow Data | `borrow` | `D3_Borrow_Data` |

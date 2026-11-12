@@ -9,7 +9,9 @@ A visual version is in [`DFD_DIAGRAM.md`](DFD_DIAGRAM.md).
 
 ## Why this matches the final system
 
-- Every physical table is represented by a DFD view (D0–D14).
+- Every logical data store is exposed by a DFD view (D1–D14).
+- `app_state` is the backend JSON snapshot, not a DFD data store; the views and
+  this document describe it separately.
 - Every process in the original DFD (1.0–11.0) is still implemented.
 - The final system adds:
   - **4.1 QR Scan & Location Capture**
@@ -21,9 +23,9 @@ A visual version is in [`DFD_DIAGRAM.md`](DFD_DIAGRAM.md).
   - **D14 Sync Data**
 - No table was renamed, so the running application is unaffected.
 
-`app_state` is the application’s authoritative JSON snapshot. It is shown as
-**D0 Application State** for completeness; it supports the logical stores
-D2–D10. The normalized tables are rebuilt from `app_state` on save.
+`app_state` is the application’s authoritative JSON snapshot. It is **not a
+DFD data store**; it supports the logical stores D2–D10 and is rebuilt into the
+normalized tables on save.
 
 ## External entities
 
@@ -60,7 +62,6 @@ D2–D10. The normalized tables are rebuilt from `app_state` on save.
 
 | DFD store | Physical table(s) | DFD view |
 | --- | --- | --- |
-| D0 Application State | `app_state` | `D0_Application_State` |
 | D1 User Data | `users`, `sessions` | `D1_User_Data` |
 | D2 Asset Data | `assets` | `D2_Asset_Data` |
 | D3 Borrow Data | `borrow` | `D3_Borrow_Data` |
@@ -76,8 +77,9 @@ D2–D10. The normalized tables are rebuilt from `app_state` on save.
 | D13 Notification Data | `notifications` | `D13_Notification_Data` |
 | D14 Sync Data | `sync_events` | `D14_Sync_Data` |
 
-All 17 physical tables are covered. Views are read-only and do not change the
-application’s behavior.
+All business tables are covered by the D1–D14 views. `app_state` is the
+technical JSON snapshot and is documented separately; views are read-only and
+do not change the application’s behavior.
 
 ## DFD
 
@@ -109,7 +111,6 @@ flowchart LR
   end
 
   subgraph Stores
-    D0[(D0 Application State)]
     D1[(D1 User Data)]
     D2[(D2 Asset Data)]
     D3[(D3 Borrow Data)]
@@ -162,16 +163,6 @@ flowchart LR
   P14 --> D12
   P14 --> D14
   DEV --> P14
-
-  D0 -.implementation snapshot.-> D2
-  D0 -.implementation snapshot.-> D3
-  D0 -.implementation snapshot.-> D4
-  D0 -.implementation snapshot.-> D5
-  D0 -.implementation snapshot.-> D6
-  D0 -.implementation snapshot.-> D7
-  D0 -.implementation snapshot.-> D8
-  D0 -.implementation snapshot.-> D9
-  D0 -.implementation snapshot.-> D10
 ```
 
 ## Notes
@@ -183,8 +174,8 @@ flowchart LR
   `source` column distinguishes `activity` from `audit`.
 - D1 excludes session tokens and D9 excludes file contents; the views expose
   only reporting fields.
-- `D0_Application_State` shows key names, update metadata, and value size — not
-  the full JSON payload — so it remains safe for reporting.
+- `app_state` is **not** a DFD data store. It is the backend JSON snapshot that
+  is projected into the normalized tables D2–D10; no D0 view is created.
 - The views are created by `docs/dfd_views.sql` and also included in
   `docs/katipunan_ams_install.sql`. They are optional for the application and
   can be dropped without affecting it.

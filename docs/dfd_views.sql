@@ -5,7 +5,6 @@
 -- from the system DFD. They are read-only reporting views; the
 -- application continues to use its physical tables and code.
 --
--- D0  Application State (implementation snapshot, supports D2-D10)
 -- D1  User Data                 -> users + sessions
 -- D2  Asset Data                -> assets
 -- D3  Borrow Data               -> borrow
@@ -21,15 +20,15 @@
 -- D13 Notification Data         -> notifications
 -- D14 Sync Data                 -> sync_events
 --
+-- app_state is an implementation JSON snapshot, not a DFD data store.
+--
 -- Apply with:
 --   C:\xampp\mysql\bin\mysql.exe -u root < docs\dfd_views.sql
 -- ============================================================
 
 USE `katipunan_ams`;
 
-CREATE OR REPLACE VIEW `D0_Application_State` AS
-SELECT `key`, updated_at, updated_by, CHAR_LENGTH(`value`) AS value_bytes
-FROM app_state;
+DROP VIEW IF EXISTS `D0_Application_State`;
 
 CREATE OR REPLACE VIEW `D1_User_Data` AS
 SELECT u.id, u.username, u.name, u.role, u.office, u.active, u.created_at,

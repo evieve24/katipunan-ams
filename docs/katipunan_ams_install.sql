@@ -1,8 +1,10 @@
 -- ============================================================
 -- Katipunan Asset Management System
 -- Complete MariaDB installation script
--- Creates the database and all 17 application tables.
--- Safe to re-run: every table uses CREATE TABLE IF NOT EXISTS.
+-- Creates the database, all 17 application tables, and the
+-- D1-D14 read-only DFD views.
+-- Safe to re-run: tables use IF NOT EXISTS and views use
+-- CREATE OR REPLACE.
 --
 -- Import with:
 --   C:\xampp\mysql\bin\mysql.exe -u root < docs\katipunan_ams_install.sql
@@ -12,6 +14,7 @@
 
 CREATE DATABASE IF NOT EXISTS `katipunan_ams`
   CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 USE `katipunan_ams`;
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
@@ -320,14 +323,12 @@ CREATE TABLE IF NOT EXISTS `users` (
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
 -- ============================================================
--- ============================================================
 -- Katipunan AMS - DFD logical views (Option 1)
 --
 -- These views expose the working tables using the data-store names
 -- from the system DFD. They are read-only reporting views; the
 -- application continues to use its physical tables and code.
 --
--- D0  Application State (implementation snapshot, supports D2-D10)
 -- D1  User Data                 -> users + sessions
 -- D2  Asset Data                -> assets
 -- D3  Borrow Data               -> borrow
@@ -343,15 +344,15 @@ CREATE TABLE IF NOT EXISTS `users` (
 -- D13 Notification Data         -> notifications
 -- D14 Sync Data                 -> sync_events
 --
+-- app_state is an implementation JSON snapshot, not a DFD data store.
+--
 -- Apply with:
 --   C:\xampp\mysql\bin\mysql.exe -u root < docs\dfd_views.sql
 -- ============================================================
 
 USE `katipunan_ams`;
 
-CREATE OR REPLACE VIEW `D0_Application_State` AS
-SELECT `key`, updated_at, updated_by, CHAR_LENGTH(`value`) AS value_bytes
-FROM app_state;
+DROP VIEW IF EXISTS `D0_Application_State`;
 
 CREATE OR REPLACE VIEW `D1_User_Data` AS
 SELECT u.id, u.username, u.name, u.role, u.office, u.active, u.created_at,
