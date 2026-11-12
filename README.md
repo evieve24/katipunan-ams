@@ -554,6 +554,7 @@ require `Authorization: Bearer <token>`.
 - Procurement Forecasting with inflation and replacement windows.
 - Asset Life Cycle monitoring.
 - Reports, CSV export, activity log, recycle bin.
+- All report generation is centralized in the Reports Center: serviceable, unserviceable, by office, overall master list, PPE, semi-expendable, and procurement forecast reports.
 - Role-based permissions (GSO-OIC, Inspectorate, GSO Staff, Office Head).
 - Dark mode, search, backup/restore, sync center.
 - Search totals and an asset-type summary showing how many laptops, desktops, printers, chairs, and other equipment types are on record.

@@ -585,7 +585,6 @@
         <button class="back-btn" style="margin-bottom:0" id="staff-back-btn" onclick="goBack()">← Back</button>
         <div style="display:flex;gap:7px;flex-wrap:wrap;">
           <button class="action-btn add" onclick="openAddPersonnelModal()" style="padding:6px 14px">＋ Add Personnel</button>
-          <button class="back-btn" style="margin-bottom:0" onclick="printStaffDeptReport()">🖨️ Print Dept. Report</button>
         </div>
       </div>
       <h2 class="section-title" id="staff-title">Staff</h2>
@@ -605,9 +604,6 @@
     <div class="view" id="view-equipment">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
         <button class="back-btn" style="margin-bottom:0" onclick="goHome()">← Back to Dashboard</button>
-        <div style="display:flex;gap:7px;">
-          <button class="back-btn" style="margin-bottom:0" onclick="printOverallReport()">🖨️ Print Report</button>
-        </div>
       </div>
       <h2 class="section-title">📦 Equipment Master List</h2>
       <p class="section-subtitle">All tracked assets across all offices</p>
@@ -806,7 +802,7 @@
     <div class="view" id="view-reports">
       <button class="back-btn" onclick="goHome()">← Back to Dashboard</button>
       <h2 class="section-title">📊 Reports Center</h2>
-      <p class="section-subtitle">Generate serviceable/unserviceable reports by office or overall</p>
+      <p class="section-subtitle">All system reports are generated here — serviceable/unserviceable, by office, overall, PPE, semi-expendable, and procurement forecast</p>
       <div class="reports-grid">
         <div class="report-card" onclick="printReportServiceable()">
           <div class="rc-icon">✅</div>
@@ -844,11 +840,20 @@
           <div class="rc-desc">Downloadable spreadsheet of all assets with status, location, acquisition date, useful life and amount</div>
           <button class="rc-btn navy">Download CSV</button>
         </div>
+        <div class="report-card" onclick="printOverallReport()">
+          <div class="rc-icon">🗂️</div>
+          <div class="rc-title">Overall Equipment Master List</div>
+          <div class="rc-desc">Complete printed inventory of every asset across all offices</div>
+          <button class="rc-btn navy">Print Report</button>
+        </div>
         <div class="report-card" onclick="showProcurementForecast()">
           <div class="rc-icon">🛒</div>
           <div class="rc-title">Procurement Forecast Report</div>
           <div class="rc-desc">Assets that may need replacement, ranked by priority — based on condition, remaining useful life, repair history and maintenance cost</div>
-          <button class="rc-btn navy">Open Forecast</button>
+          <div class="rc-actions">
+            <button class="rc-btn navy" onclick="event.stopPropagation();showProcurementForecast()">Open Forecast</button>
+            <button class="rc-btn green" onclick="event.stopPropagation();pfPrintReport()">Print Report</button>
+          </div>
         </div>
       </div>
     </div>
@@ -879,9 +884,6 @@
     <div class="view" id="view-forecast">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
         <button class="back-btn" style="margin-bottom:0" onclick="goHome()">← Back to Dashboard</button>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="pf-btn primary" onclick="pfPrintReport()">🖨 Print Forecast Report</button>
-        </div>
       </div>
       <h2 class="section-title">🛒 Procurement Forecasting Dashboard</h2>
       <p class="section-subtitle">Identifies assets that may need replacement or procurement, based on condition, remaining useful life, repair history and maintenance cost</p>

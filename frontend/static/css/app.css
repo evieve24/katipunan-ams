@@ -906,6 +906,8 @@ mark{background:#fff3cd;color:var(--navy);border-radius:2px;padding:0 2px;}
 .rc-btn.navy{background:rgba(13,27,62,0.1);color:var(--navy);}
 .rc-btn.gold{background:rgba(201,168,76,0.15);color:var(--gold-dim);}
 .rc-btn.orange{background:var(--orange-light);color:var(--orange);}
+.rc-actions{display:flex;gap:8px;flex-wrap:wrap;align-self:flex-start;}
+.rc-actions .rc-btn{align-self:auto;}
 
 /* ── RECYCLE BIN ── */
 .bin-item{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:14px 16px;margin-bottom:9px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow);}

@@ -2752,44 +2752,6 @@ function printIndividualReport(){
   logAction(`Printed individual report for ${s.name}`);
 }
 
-function printStaffDeptReport(){
-  const list=currentDeptStaff;if(!list||!list.length){alert('No staff loaded.');return;}
-  let deptName='Department';
-  for(const[oid,od]of Object.entries(officeData)){const f=od.depts.find(d=>d.id===currentDeptId);if(f){deptName=f.name;break;}}
-  const svcList=list.flatMap(s=>s.equipment.filter(e=>e.status==='Serviceable').map(eq=>({...eq,_staffName:s.name})));
-  const unsvcList=list.flatMap(s=>s.equipment.filter(e=>e.status!=='Serviceable').map(eq=>({...eq,_staffName:s.name})));
-  const makeRows=(items)=>items.map(eq=>`<tr>
-    <td style="padding:6px 8px;border-bottom:1px solid #eee;font-size:0.72rem">${eq._staffName}</td>
-    <td style="padding:6px 8px;border-bottom:1px solid #eee;font-size:0.72rem">${eq.id}</td>
-    <td style="padding:6px 8px;border-bottom:1px solid #eee;font-size:0.72rem">${eq.name}</td>
-    <td style="padding:6px 8px;border-bottom:1px solid #eee;font-size:0.72rem">${eq.brand}</td>
-    <td style="padding:6px 8px;border-bottom:1px solid #eee;font-size:0.72rem">${eq.serial}</td>
-    <td style="padding:6px 8px;border-bottom:1px solid #eee;font-size:0.72rem">${eq.acquiredDate||'N/A'}</td>
-    <td style="padding:6px 8px;border-bottom:1px solid #eee;font-size:0.72rem">${formatAmt(eq.amount)}</td>
-    <td style="padding:6px 8px;border-bottom:1px solid #eee;font-size:0.72rem">${getCategory(eq)}</td>
-    <td style="padding:6px 8px;border-bottom:1px solid #eee;font-size:0.72rem;font-weight:700;color:${eq.status==='Serviceable'?'#2d7d46':eq.status==='Damaged'?'#b7791f':'#c0392b'}">${eq.status}</td>
-  </tr>`).join('');
-  const thead=`<thead><tr><th>Personnel</th><th>Item ID</th><th>Equipment</th><th>Brand/Model</th><th>Serial No.</th><th>Date Acquired</th><th>Amount (₱)</th><th>Category</th><th>Status</th></tr></thead>`;
-  const w=window.open('','_blank');
-  w.document.write(`<!DOCTYPE html><html><head><title>Dept Report — ${deptName}</title>
-  <style>body{font-family:serif;color:#1a1a2e;padding:40px;max-width:1000px;margin:0 auto}table{width:100%;border-collapse:collapse}th{background:#0d1b3e;color:#c9a84c;padding:8px 10px;font-size:0.72rem;text-align:left}@media print{@page{margin:1in}}</style>
-  </head><body>
-  ${getReportHeader('DEPARTMENT EQUIPMENT INVENTORY REPORT',deptName)}
-  <div style="display:flex;gap:20px;margin-bottom:14px;font-family:serif">
-    <div style="text-align:center;border:1px solid #2d7d46;border-radius:6px;padding:8px 14px"><div style="font-size:1.2rem;font-weight:700;color:#2d7d46">${svcList.length}</div><div style="font-size:0.7rem">✅ Serviceable</div></div>
-    <div style="text-align:center;border:1px solid #c0392b;border-radius:6px;padding:8px 14px"><div style="font-size:1.2rem;font-weight:700;color:#c0392b">${unsvcList.length}</div><div style="font-size:0.7rem">❌ Unserviceable/Other</div></div>
-  </div>
-  ${svcList.length?`<h3 style="color:#2d7d46;margin:14px 0 8px">✅ Serviceable Equipment — ${svcList.length} item(s)</h3>
-  <table>${thead}<tbody>${makeRows(svcList)}</tbody></table>`:''}
-  ${unsvcList.length?`<h3 style="color:#c0392b;margin:18px 0 8px">❌ Unserviceable / Damaged / Lost / Missing — ${unsvcList.length} item(s)</h3>
-  <table>${thead}<tbody>${makeRows(unsvcList)}</tbody></table>`:''}
-  ${getSignatureLine()}
-  <script>window.onload=()=>window.print()<\/script>
-  </body></html>`);
-  logAction(`Printed department report: ${deptName}`);
-
-}
-
 function printOverallReport(){
   const allEq=getAllEquipment();
   const usable=allEq.filter(e=>e.status==='Serviceable').length;
