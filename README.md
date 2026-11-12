@@ -213,17 +213,17 @@ Default Project/
 - Generation uses the bundled `frontend/static/js/qrcode.min.js` at 420 px with
   Q error correction, so tags remain readable when printed and work offline.
 - Scanning uses `frontend/static/js/html5-qrcode.min.js`:
-  - **Mobile Scanner** page → tap the viewfinder. The camera feed appears inside
-    the viewfinder (no separate modal).
+  - **Mobile Scanner** page → the camera starts automatically after an office is
+    selected. The camera feed appears inside the viewfinder (no separate modal
+    and no Start/Stop controls).
   - On a valid tag, the **Asset detected** banner shows the office and the
     location accuracy, and **View Asset Details** becomes active.
-  - **Upload QR image** and **Demo scan** are available below the viewfinder
-    for desktops or when camera access is unavailable.
+  - If the camera cannot start, the viewfinder shows **Scanner unavailable**.
   - A full JSON payload or just the asset ID works; the app resolves the
     remaining details from its own records.
-- Browsers only allow camera access on `localhost` or HTTPS. If you open the
-  app from another computer over plain HTTP, use **Upload QR image**, or put
-  the server behind HTTPS.
+- Browsers only allow camera access on `localhost` or HTTPS. If the camera
+  cannot start, the scanner shows **Scanner unavailable**; put the server
+  behind HTTPS for LAN scanning.
 
 ### Geolocation during scans
 

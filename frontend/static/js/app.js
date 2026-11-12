@@ -976,13 +976,7 @@ function createQrScanner(elementId){
   return new Html5Qrcode(elementId,config);
 }
 function cameraErrorMessage(err){
-  const name=(err&&err.name)||'';
-  if(!window.isSecureContext)return 'Camera requires localhost or HTTPS. Open the app at http://localhost:8080 or use HTTPS.';
-  if(name==='NotAllowedError'||name==='PermissionDeniedError'||name==='SecurityError')return 'Camera permission denied. Allow camera access for this site, then press Start again.';
-  if(name==='NotFoundError'||name==='DevicesNotFoundError')return 'No camera found. Connect a webcam or use Upload QR image.';
-  if(name==='NotReadableError'||name==='TrackStartError')return 'The camera is in use by another app. Close Teams/Zoom/Camera, then press Start again.';
-  if(name==='OverconstrainedError')return 'The selected camera is unavailable. Choose another camera and press Start.';
-  return 'Camera unavailable. Allow camera permission, close other camera apps, or use Upload QR image.';
+  return 'Scanner unavailable';
 }
 function qrCameraCandidates(selectId){
   const list=[];
@@ -4821,11 +4815,18 @@ function resetMobileScanUI() {
   const btn = document.getElementById('viewAssetBtn');
   if (btn) { btn.style.opacity = '.4'; btn.style.pointerEvents = 'none'; }
   const hint = document.getElementById('scanHintText');
-  if (hint) hint.textContent = 'Point camera at asset QR code tag';
+  if (hint) { hint.textContent = 'Point camera at asset QR code tag'; hint.style.display = ''; }
   const box = document.getElementById('scannerAreaBox');
-  if (box) box.classList.remove('detected');
+  if (box) { box.classList.remove('detected'); box.classList.remove('unavailable'); }
   const geo = document.getElementById('detectedGeo');
   if (geo) geo.textContent = '—';
+}
+
+function showMobileScannerUnavailable(){
+  const box = document.getElementById('scannerAreaBox');
+  if (box) { box.classList.remove('live'); box.classList.add('unavailable'); }
+  const hint = document.getElementById('scanHintText');
+  if (hint) { hint.textContent = ''; hint.style.display = 'none'; }
 }
 
 function autoStartMobileScanner(delay){
@@ -4860,14 +4861,13 @@ function stopMobileQRScan() {
 
 async function startMobileQRScan(deviceId) {
   if (typeof Html5Qrcode === 'undefined') {
-    ms_showToast('QR scanner library not loaded');
+    showMobileScannerUnavailable();
+    ms_showToast('📷 Scanner unavailable');
     return null;
   }
   if (!window.isSecureContext) {
-    const secureMsg = cameraErrorMessage(null);
-    const secureHint = document.getElementById('scanHintText');
-    if (secureHint) secureHint.textContent = secureMsg;
-    ms_showToast('📷 ' + secureMsg);
+    showMobileScannerUnavailable();
+    ms_showToast('📷 Scanner unavailable');
     return null;
   }
   if (msInlineScanner) return msInlineScanner;
@@ -4914,10 +4914,8 @@ async function startMobileQRScan(deviceId) {
     }
   }
   stopMobileQRScan();
-  box.classList.remove('live');
-  const message = cameraErrorMessage(lastError);
-  if (hint) hint.textContent = message;
-  ms_showToast('📷 ' + message);
+  showMobileScannerUnavailable();
+  ms_showToast('📷 Scanner unavailable');
   logAction('Camera scan unavailable: ' + (lastError && lastError.message ? lastError.message : lastError));
   return null;
 }
