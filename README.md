@@ -121,6 +121,7 @@ Default Project/
 ├── docs/
 │   ├── ERD.md               # Applied ERD, table map, and Mermaid diagram
 │   ├── DFD_MAPPING.md       # Implemented DFD, D0-D14 stores, processes, and table mapping
+│   ├── DFD_DIAGRAM.md       # Visual updated DFD (core + final-system extensions)
 │   ├── SCANNER_GEOLOCATION.md  # Scanner, GPS, map, offline queue, and scan-history design
 │   ├── dfd_views.sql        # DFD-named read-only views (D0-D14)
 │   ├── katipunan_ams_install.sql  # Complete CREATE DATABASE + table + view installation script
@@ -167,6 +168,7 @@ Default Project/
 | `frontend/static/images/icons/` | App icons (192px, 512px, maskable 512px). |
 | `docs/ERD.md` | Applied ERD: entities, physical tables, relationships, and diagram. |
 | `docs/DFD_MAPPING.md` | Implemented DFD: actors, processes 1.0–14.0, data stores D0–D14, and physical-table mapping. |
+| `docs/DFD_DIAGRAM.md` | Visual updated DFD: core D1–D11 plus the D12–D14 final-system extensions. |
 | `docs/SCANNER_GEOLOCATION.md` | Scanner, camera selection, GPS, maps, PWA offline queue, database, and testing details. |
 | `docs/dfd_views.sql` | Read-only views named after the DFD data stores (`D0_Application_State` … `D14_Sync_Data`). |
 | `docs/katipunan_ams_install.sql` | Complete installation script: creates `katipunan_ams`, all 17 tables, and the DFD views; safe to re-run. |

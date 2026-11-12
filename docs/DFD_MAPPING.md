@@ -5,6 +5,8 @@ final database. It uses **Option 1**: the physical tables keep their working
 names, while DFD-named read-only views expose the same data under the DFD data
 store names.
 
+A visual version is in [`DFD_DIAGRAM.md`](DFD_DIAGRAM.md).
+
 ## Why this matches the final system
 
 - Every physical table is represented by a DFD view (D0–D14).
