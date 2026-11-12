@@ -2688,6 +2688,7 @@ function printOverallReport(){
     <td style="padding:6px 8px;border-bottom:1px solid #eee;font-size:0.73rem;font-weight:700;color:${eq.status==='Serviceable'?'#2d7d46':eq.status==='Damaged'?'#b7791f':'#c0392b'}">${eq.status}</td>
   </tr>`).join('');
   const w=window.open('','_blank');
+  if(!w){alert('Allow pop-ups for this site to generate reports.');return;}
   w.document.write(`<!DOCTYPE html><html><head><title>Overall Equipment Report</title>
   <style>body{font-family:serif;color:#1a1a2e;padding:40px;max-width:1100px;margin:0 auto}table{width:100%;border-collapse:collapse}th{background:#0d1b3e;color:#c9a84c;padding:8px 10px;font-size:0.7rem;text-align:left}@media print{@page{margin:0.75in}}</style>
   </head><body>
@@ -2705,6 +2706,7 @@ function printOverallReport(){
   ${getSignatureLine()}
   <script>window.onload=()=>window.print()<\/script>
   </body></html>`);
+  w.document.close();
   logAction('Printed Overall Equipment Report');
 }
 
@@ -3324,6 +3326,7 @@ function openReportWindow(title,subtitle,bodyContent){
   const sysName=document.getElementById('systemNameInput')?.value||'QR Code-Based Asset Management System with Procurement Forecasting for the Local Government Unit of Katipunan, Zamboanga del Norte';
   const now=new Date().toLocaleDateString('en-PH',{year:'numeric',month:'long',day:'numeric'});
   const w=window.open('','_blank');
+  if(!w){alert('Allow pop-ups for this site to generate reports.');return;}
   w.document.write(`<!DOCTYPE html><html><head><title>${title}</title>
   <style>
     body{font-family:serif;color:#1a1a2e;padding:40px;max-width:1000px;margin:0 auto}
@@ -3347,6 +3350,7 @@ function openReportWindow(title,subtitle,bodyContent){
   </div>
   <script>window.onload=()=>window.print()<\/script>
   </body></html>`);
+  w.document.close();
 }
 
 // ══════════════════════════════════════════════════════════
