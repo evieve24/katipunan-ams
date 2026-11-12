@@ -1102,12 +1102,6 @@ function restartMobileCamera(deviceId){
   stopMobileQRScan();
   startMobileQRScan(deviceId);
 }
-function stopMobileCamera(){
-  stopMobileQRScan();
-  const hint=document.getElementById('scanHintText');
-  if(hint)hint.textContent='Scanner stopped — press ▶ Start to resume.';
-  showSyncToast('⏹ Scanner stopped');
-}
 
 
 async function onQRScanSuccess(decodedText){
@@ -4199,10 +4193,11 @@ function _doOpenMobileScanner() {
   const area = document.getElementById('scannerAreaBox');
   if (area) area.classList.add('ready');
   const hint = document.getElementById('scanHintText');
-  if (hint) hint.textContent = 'Press ▶ Start to begin scanning';
+  if (hint) hint.textContent = 'Starting camera…';
   updateStatusTime();
   if(typeof initGeolocation==='function') initGeolocation();
-  if(typeof loadCameraSelectors==='function') loadCameraSelectors();
+  goTo('step-scan');
+  autoStartMobileScanner(150);
 }
 
 // Close the mobile scanner and return to the previous screen (or dashboard).
@@ -4758,12 +4753,14 @@ function resetForNextScan() {
   const area = document.getElementById('scannerAreaBox');
   if (area) area.classList.add('ready');
   goTo('step-scan');
+  autoStartMobileScanner(150);
 }
 
 /* ── CAMERA SCAN (real QR, inline viewfinder) ── */
 let msInlineScanner = null;
 let msInlineScanBusy = false;
 let msFrameSyncTimer = null;
+let msAutoStartTimer = null;
 
 /* Align the gold animation frame with the QR library's white scan box so the
    gold border and scan line always sit inside the white brackets. */
@@ -4829,11 +4826,25 @@ function resetMobileScanUI() {
   const btn = document.getElementById('viewAssetBtn');
   if (btn) { btn.style.opacity = '.4'; btn.style.pointerEvents = 'none'; }
   const hint = document.getElementById('scanHintText');
-  if (hint) hint.textContent = 'Press ▶ Start to begin scanning';
+  if (hint) hint.textContent = 'Point camera at asset QR code tag';
   const box = document.getElementById('scannerAreaBox');
   if (box) box.classList.remove('detected');
   const geo = document.getElementById('detectedGeo');
   if (geo) geo.textContent = '—';
+}
+
+function autoStartMobileScanner(delay){
+  if (msAutoStartTimer) { clearTimeout(msAutoStartTimer); msAutoStartTimer = null; }
+  msAutoStartTimer = setTimeout(() => {
+    msAutoStartTimer = null;
+    if (!document.getElementById('view-mobilescanner')?.classList.contains('active')) return;
+    if (!document.getElementById('step-scan')?.classList.contains('active')) return;
+    const banner = document.getElementById('scanDetected');
+    if (banner && banner.style.display === 'block') return;
+    const hint = document.getElementById('scanHintText');
+    if (hint) hint.textContent = 'Starting camera…';
+    startMobileQRScan();
+  }, delay == null ? 150 : delay);
 }
 
 function stopMobileQRScan() {
@@ -4842,6 +4853,7 @@ function stopMobileQRScan() {
     msInlineScanner = null;
   }
   msInlineScanBusy = false;
+  if (msAutoStartTimer) { clearTimeout(msAutoStartTimer); msAutoStartTimer = null; }
   if (typeof clearMobileScanFrameSync === 'function') clearMobileScanFrameSync();
   const box = document.getElementById('scannerAreaBox');
   if (box) box.classList.remove('live');

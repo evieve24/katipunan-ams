@@ -148,8 +148,10 @@ notify the OIC as before.
 
 ### UI additions
 
-- Mobile scanner: camera selector, **Start**, **Stop**, **Scan Again**, and
-  **Close** buttons, existing tap-to-scan, image upload, demo scan.
+- Mobile scanner: starts automatically after an office is selected. Camera
+  selector, **Close**, image upload, and demo scan remain; Start, Stop, and
+  Scan Again are removed. Detection shows the confirmation banner and
+  **View Asset Details**.
 - QR-only decoding, native BarcodeDetector where available, 30 FPS, and an
   adaptive scan box for faster detection.
 - Scanner modal: camera selector, **Start**, **Stop**, **Scan Again** buttons.
@@ -165,8 +167,8 @@ notify the OIC as before.
 
 ### Camera/device behaviour
 
-- Laptop/desktop webcam: modal or mobile scanner; camera selector lists
-  devices from `Html5Qrcode.getCameras()`.
+- Laptop/desktop webcam: modal or auto-starting mobile scanner; camera selector
+  lists devices from `Html5Qrcode.getCameras()`.
 - USB webcam: same device list.
 - Android/iPhone/iPad: `facingMode: environment` selects the rear camera by
   default; device selection is also available.

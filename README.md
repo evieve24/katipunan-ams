@@ -243,8 +243,10 @@ Default Project/
 
 ### Camera controls, scan history, and offline queue
 
-- The **Mobile Scanner** provides a camera selector, **Start**, **Stop**,
-  **Scan Again**, **Close**, **Upload QR image**, and **Demo scan**.
+- The **Mobile Scanner** starts the camera automatically after an office is
+  selected. It provides a camera selector, **Close**, **Upload QR image**, and
+  **Demo scan**; Start, Stop, and Scan Again were removed. After detection, tap
+  **View Asset Details** to open the asset.
 - The **desktop QR modal** provides a camera selector, **Start**, **Stop**, and
   **Scan Again**.
 - The scanner is tuned for speed: QR-only decoding, native
