@@ -243,19 +243,18 @@ Default Project/
 
 ### Camera controls, scan history, and offline queue
 
-- The **Mobile Scanner** starts the camera automatically when opened and keeps
-  scanning until a QR code is detected. The Asset Details screen then opens
-  automatically. The topbar close button returns to the previous screen.
-- The **desktop QR modal** keeps its camera selector, **Start**, **Stop**, and
-  **Scan Again** controls.
+- The **Mobile Scanner** provides a camera selector, **Start**, **Stop**,
+  **Scan Again**, **Close**, **Upload QR image**, and **Demo scan**.
+- The **desktop QR modal** provides a camera selector, **Start**, **Stop**, and
+  **Scan Again**.
 - The scanner is tuned for speed: QR-only decoding, native
   `BarcodeDetector` when the browser supports it, 30 FPS, and an adaptive scan
   box (65% of the viewfinder).
 - The layout is responsive from phone to desktop: an off-canvas sidebar with a
   hamburger button, stacked statistics/settings grids, horizontally scrollable
   tables, full-screen mobile scanner, and 94vw modals.
-- Phones and tablets automatically prefer the rear camera (`facingMode:
-  environment`); laptops and desktops use the available webcam/USB camera.
+- Phones and tablets prefer the rear camera (`facingMode: environment`); laptops
+  and desktops can select any connected webcam/USB camera.
 - After a scan, the result screen shows the **registered location** and
   **registered coordinates**, the **actual scanned coordinates**, GPS accuracy,
   scan time, a distance check, a **map preview**, **View on Map** and

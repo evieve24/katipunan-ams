@@ -54,6 +54,7 @@
       <div class="lp-feat-pill">☁️ Google Drive &amp; Hard Drive Backup</div>
     </div>
     <button class="lp-enter-btn" onclick="enterSystem()">Enter System &nbsp;›</button>
+    <div class="lp-progress-text" style="margin-top:12px;font-size:0.72rem;letter-spacing:0.08em;color:rgba(255,255,255,0.45);">Click Enter System to continue</div>
   </div>
   <div class="lp-caption">Municipality of Katipunan &middot; Zamboanga del Norte &middot; General Services Office</div>
   <div class="lp-bottom-strip"></div>
@@ -1000,6 +1001,15 @@
           <span class="geo-coords" id="gpsCoords">—</span>
         </div>
 
+        <!-- hint text only, no header block -->
+        <div class="sc-hint-only" id="scanHintText">Point camera at asset QR code tag</div>
+        <div class="camera-select-row">
+          <span class="camera-select-label">Camera</span>
+          <select id="msCameraSel" class="camera-select" onchange="restartMobileCamera(this.value)">
+            <option value="">Auto (rear camera on mobile)</option>
+          </select>
+        </div>
+
         <!-- ④ Scanner viewport -->
         <div class="sc-viewport">
           <div class="scanner-card-box" id="scannerAreaBox" onclick="startMobileQRScan()" title="Tap to scan QR with camera">
@@ -1030,9 +1040,21 @@
               </div>
             </div>
             <div class="scanner-live-badge" id="scannerLiveBadge"><span class="slb-dot"></span> SCANNING</div>
+            <div class="scanner-tap-hint" id="scannerTapHint"><i class="ti ti-camera" style="font-size:13px;"></i> Tap to scan with camera</div>
           </div>
         </div>
-
+        <div style="display:flex;justify-content:center;gap:16px;padding:0 14px 8px;font-size:10px;color:#8899bb;">
+          <span style="cursor:pointer" onclick="msChooseQRImage()">🖼️ Upload QR image</span>
+          <span style="cursor:pointer" onclick="simulateDemoScan()">No camera? Demo scan</span>
+        </div>
+        <div class="scanner-controls">
+          <button type="button" class="scanner-ctrl-btn start" onclick="startMobileQRScan((document.getElementById('msCameraSel')||{}).value||'')">▶ Start</button>
+          <button type="button" class="scanner-ctrl-btn stop" onclick="stopMobileCamera()">⏹ Stop</button>
+          <button type="button" class="scanner-ctrl-btn again" onclick="resetForNextScan()">🔄 Scan Again</button>
+          <button type="button" class="scanner-ctrl-btn close" onclick="closeMobileScanner()">✕ Close</button>
+        </div>
+        <input type="file" id="msQRFileInput" accept="image/*" style="display:none" onchange="msScanQRFile(this.files && this.files[0]); this.value='';">
+        <div id="msQRFileReader" style="display:none;"></div>
 
         <!-- hidden office-dd kept for JS compatibility -->
         <div style="display:none;">
@@ -1062,7 +1084,12 @@
           <div class="sd-sub" id="detectedGeo">8.5216°N, 123.3053°E · Accuracy ±4m</div>
         </div>
 
-        <!-- Asset details open automatically after a QR decode. -->
+        <!-- ⑧ Footer button -->
+        <div class="sc-footer">
+          <button class="scan-btn" id="viewAssetBtn" onclick="viewAsset()" style="opacity:.4;pointer-events:none;margin:0;width:100%;">
+            <i class="ti ti-eye"></i> View Asset Details
+          </button>
+        </div>
 
       </div><!-- /sc-card -->
       </div><!-- /sc-page-wrap -->

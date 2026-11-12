@@ -145,6 +145,7 @@
 .lp-enter-btn:hover::after { transform:translateX(100%); }
 .lp-enter-btn:hover { transform:translateY(-3px);box-shadow:0 14px 40px rgba(201,168,76,0.55); }
 .lp-enter-btn:active { transform:translateY(0); }
+.lp-progress-text { font-size:0.62rem;color:#5a7099;letter-spacing:0.1em; }
 .lp-particles { position:absolute;inset:0;pointer-events:none;overflow:hidden; }
 .lp-particle {
   position:absolute;border-radius:50%;background:rgba(201,168,76,0.6);
@@ -1967,6 +1968,7 @@ body:not(.role-oic) .action-btn.delete,body:not(.role-oic) .staff-card .action-b
   .lp-features{gap:6px;margin-bottom:26px;}
   .lp-feat-pill{font-size:.6rem;padding:4px 9px;}
   .lp-enter-btn{padding:14px 34px;font-size:.95rem;}
+  .lp-progress-text{font-size:.62rem!important;}
 
   #view-mobilescanner .sc-page-wrap{padding:8px;}
   #view-mobilescanner .sc-topbar{padding:8px 10px;gap:5px;}
