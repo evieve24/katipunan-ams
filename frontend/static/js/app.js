@@ -1097,17 +1097,7 @@ function stopQRScannerCamera(){
   const err=document.getElementById('qrScanError');
   if(err){err.style.display='block';err.textContent='Scanner stopped — press ▶ Start to resume.';}
 }
-function restartMobileCamera(deviceId){
-  if(deviceId){try{localStorage.setItem('mets_camera_id',deviceId);}catch(e){}}
-  stopMobileQRScan();
-  startMobileQRScan(deviceId);
-}
-function stopMobileCamera(){
-  stopMobileQRScan();
-  const hint=document.getElementById('scanHintText');
-  if(hint)hint.textContent='Scanner stopped — press ▶ Start to resume.';
-  showSyncToast('⏹ Scanner stopped');
-}
+
 
 async function onQRScanSuccess(decodedText){
   if(_scanBusy)return;
@@ -2185,21 +2175,22 @@ function searchResultHeadline(results,query,equipmentMatches){
   const extra=types.length>3?` + ${types.length-3} more type${types.length-3===1?'':'s'}`:'';
   return `${eqCount} asset${eqCount===1?'':'s'} found for "${query}"${parts.length?` · ${parts.join(', ')}${extra}`:''}${total!==eqCount?` · ${total} total results`:''}`;
 }
-function renderSearchAssetSummary(assets,matchedLabels){
+function renderSearchAssetSummary(assets){
   const el=document.getElementById('searchAssetSummary');
   if(!el)return;
-  const rows=assetTypeSummary(assets);
-  if(!rows.length){
-    el.innerHTML='<div class="asset-summary-empty">No assets recorded yet.</div>';
+  if(!assets.length){
+    el.style.display='none';
+    el.innerHTML='';
     return;
   }
-  const matched=new Set(matchedLabels||[]);
+  el.style.display='';
+  const rows=assetTypeSummary(assets);
   el.innerHTML=`<div class="asset-summary-head">
-      <div class="asset-summary-title">📦 Asset Inventory by Type</div>
-      <div class="asset-summary-total">${assets.length} asset${assets.length===1?'':'s'} total</div>
+      <div class="asset-summary-title">📦 Matching Assets by Type</div>
+      <div class="asset-summary-total">${assets.length} matching asset${assets.length===1?'':'s'}</div>
     </div>
     <div class="asset-type-grid">${rows.map(row=>`
-      <button type="button" class="asset-type-card${matched.has(row.label)?' matched':''}" data-term="${dashEsc(row.term)}" title="Show ${dashEsc(pluralAssetType(row.label,row.count))}">
+      <button type="button" class="asset-type-card" data-term="${dashEsc(row.term)}" title="Show ${dashEsc(pluralAssetType(row.label,row.count))}">
         <span class="at-count">${row.count}</span>
         <span class="at-label">${dashEsc(pluralAssetType(row.label,row.count))}</span>
       </button>`).join('')}</div>`;
@@ -2259,9 +2250,7 @@ function performSearch(query){
 function highlight(text,q){return text.replace(new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'),'<mark>$1</mark>');}
 function renderSearchResults(results,query,equipmentMatches){
   const matches=equipmentMatches||results.filter(r=>r.type==='equipment');
-  let allAssets=[];
-  try{allAssets=getAllEquipment();}catch(e){allAssets=[];}
-  renderSearchAssetSummary(allAssets,matches.map(eq=>assetTypeInfo(eq).label));
+  renderSearchAssetSummary(matches);
   document.getElementById('searchResultsCount').textContent=results.length?searchResultHeadline(results,query,matches):'';
   const list=document.getElementById('searchResultsList');
   if(!results.length){list.innerHTML=`<div class="search-no-results"><div class="sn-icon">🔍</div><p>No results for "<strong>${dashEsc(query)}</strong>"</p><p style="font-size:0.75rem;margin-top:6px;color:var(--text-light)">Try staff name, equipment, serial number, or office.</p></div>`;return;}
@@ -4198,11 +4187,10 @@ function _doOpenMobileScanner() {
   resetMobileScanUI();
   const area = document.getElementById('scannerAreaBox');
   if (area) area.classList.add('ready');
-  const hint = document.getElementById('scanHintText');
-  if (hint) hint.textContent = 'Press ▶ Start to begin scanning';
   updateStatusTime();
   if(typeof initGeolocation==='function') initGeolocation();
-  if(typeof loadCameraSelectors==='function') loadCameraSelectors();
+  // Always begin at the scan step; goTo() starts the camera automatically.
+  goTo('step-scan');
 }
 
 // Close the mobile scanner and return to the previous screen (or dashboard).
@@ -4576,6 +4564,15 @@ function goTo(id) {
   document.getElementById('histOverlay')?.classList.remove('open');
   if (id==='step-result')  populateResult();
   if (id==='step-update')  populateUpdate();
+  // Returning to the scan step restarts the camera automatically.
+  if (id==='step-scan' && document.getElementById('view-mobilescanner')?.classList.contains('active')) {
+    setTimeout(() => {
+      if (document.getElementById('step-scan')?.classList.contains('active') &&
+          document.getElementById('view-mobilescanner')?.classList.contains('active')) {
+        startMobileQRScan();
+      }
+    }, 150);
+  }
 }
 
 /* ── POPULATE RESULT ── */
@@ -4921,79 +4918,6 @@ async function startMobileQRScan(deviceId) {
   return null;
 }
 
-function msChooseQRImage() {
-  const input = document.getElementById('msQRFileInput');
-  if (input) input.click();
-}
-
-async function msScanQRFile(file) {
-  if (!file) return;
-  stopMobileQRScan();
-  if (typeof Html5Qrcode === 'undefined') {
-    ms_showToast('QR scanner library not loaded');
-    return;
-  }
-  let holder = document.getElementById('msQRFileReader');
-  if (!holder) {
-    holder = document.createElement('div');
-    holder.id = 'msQRFileReader';
-    holder.style.display = 'none';
-    document.body.appendChild(holder);
-  }
-  const scanner = createQrScanner('msQRFileReader');
-  try {
-    const text = await scanner.scanFile(file, true);
-    scanner.clear();
-    onQRDecoded(text);
-  } catch (e) {
-    try { scanner.clear(); } catch (_) {}
-    ms_showToast('No QR code found in that image');
-  }
-}
-
-/* ── DEMO TAP-TO-SCAN ── */
-function simulateDemoScan() {
-  if (!selectedOffice) {
-    ms_showToast('📍 Please select an office first');
-    return;
-  }
-  // Flash the scanner area green on "scan"
-  const area = document.getElementById('scannerAreaBox');
-  if (area) {
-    area.style.borderColor = 'rgba(93,202,165,0.8)';
-    area.style.boxShadow = '0 0 0 3px rgba(93,202,165,0.25),0 0 50px rgba(93,202,165,0.3)';
-    setTimeout(() => {
-      area.style.borderColor = '';
-      area.style.boxShadow = '';
-    }, 600);
-  }
-  // Prefer the real inventory so demo scans show actual assets.
-  const real=[];
-  for(const [dept,people] of Object.entries(staffData)){
-    if(!Array.isArray(people))continue;
-    for(const person of people){
-      for(const eq of (person.equipment||[])){
-        real.push({id:eq.id,name:eq.name,serial:eq.serial,owner:person.name,brand:eq.brand,status:eq.status,location:eq.location,acquiredDate:eq.acquiredDate,amount:eq.amount});
-      }
-    }
-  }
-  const pool=real.length?real:ALL_ASSETS.map(a=>({...a,acquiredDate:a.acq}));
-  const randomAsset=pool[Math.floor(Math.random()*pool.length)];
-  const fakeQR=JSON.stringify({
-    id: randomAsset.id,
-    name: randomAsset.name,
-    serial: randomAsset.serial,
-    owner: randomAsset.owner,
-    brand: randomAsset.brand,
-    status: randomAsset.status,
-    location: randomAsset.location,
-    acquiredDate: randomAsset.acquiredDate,
-    amount: String(randomAsset.amount||''),
-    lgu: 'LGU Katipunan'
-  });
-  onQRDecoded(fakeQR);
-}
-
 /* ── QR DECODE ── */
 async function onQRDecoded(rawText) {
   stopMobileQRScan();
@@ -5036,20 +4960,7 @@ async function onQRDecoded(rawText) {
     window._lastScanAt=new Date().toISOString();
     if(eq)queueAssetScan(scannedAsset.id,_scanLoc,'qr_mobile_scan',eq);
     try{queueSync('qr_scan',{assetId:scannedAsset.id,scannedAt:new Date().toISOString(),scannedLat:_scanLoc?_scanLoc.lat:null,scannedLng:_scanLoc?_scanLoc.lng:null,scannedAccuracy:_scanLoc?_scanLoc.acc:null,scannedDemo:!!(_scanLoc&&_scanLoc.demo),scannedLocation:currentGeo});}catch(e){}
-    // Show the confirmation banner and wait for "View Asset Details".
-    goTo('step-scan');
-    const detected = selectedOffice || scannedAsset.location || 'GSO';
-    setText('detectedOffice', detected);
-    setText('detectedGeo', currentGeo || 'Location not captured');
-    const banner = document.getElementById('scanDetected');
-    if (banner) banner.style.display = 'block';
-    const btn = document.getElementById('viewAssetBtn');
-    if (btn) { btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; }
-    const box = document.getElementById('scannerAreaBox');
-    if (box) { box.classList.remove('live'); box.classList.add('detected'); }
-    const hint = document.getElementById('scanHintText');
-    if (hint) hint.textContent = 'QR detected — tap View Asset Details';
-    // Prepare the location match/mismatch indicator for the result screen.
+    // Open the asset details automatically as soon as a QR is detected.
     const assigned = scannedAsset.location || '—';
     const scannedAt = selectedOffice || assigned;
     const mb = document.getElementById('locMatchBar');
@@ -5063,6 +4974,7 @@ async function onQRDecoded(rawText) {
       if (mm) mm.style.display = 'flex';
       if (mt) mt.textContent = `⚠ Location mismatch — asset scanned at ${scannedAt} but assigned to ${assigned}. Possible unauthorized transfer.`;
     }
+    viewAsset();
     ms_showToast(_scanLoc ? ( _scanLoc.demo ? '🧪 Asset detected — demo coordinates used' : '✅ Asset detected: ' + scannedAsset.id + ' · location saved') : '⚠ QR decoded — location not captured');
   } catch(e){ms_showToast('⚠ Invalid QR code format');}
 }

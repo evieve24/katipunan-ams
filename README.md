@@ -243,18 +243,19 @@ Default Project/
 
 ### Camera controls, scan history, and offline queue
 
-- Both the Mobile Scanner and the desktop QR modal provide a **camera
-  selector**, **Start**, **Stop**, **Scan Again**, and **Upload QR image**.
-  The Mobile Scanner also has visible **Close** buttons (topbar and control
-  row) that stop the camera and return to the previous screen or dashboard.
+- The **Mobile Scanner** starts the camera automatically when opened and keeps
+  scanning until a QR code is detected. The Asset Details screen then opens
+  automatically. The topbar close button returns to the previous screen.
+- The **desktop QR modal** keeps its camera selector, **Start**, **Stop**, and
+  **Scan Again** controls.
 - The scanner is tuned for speed: QR-only decoding, native
   `BarcodeDetector` when the browser supports it, 30 FPS, and an adaptive scan
   box (65% of the viewfinder).
 - The layout is responsive from phone to desktop: an off-canvas sidebar with a
   hamburger button, stacked statistics/settings grids, horizontally scrollable
   tables, full-screen mobile scanner, and 94vw modals.
-- Phones and tablets prefer the rear camera (`facingMode: environment`); laptops
-  and desktops can select any connected webcam/USB camera.
+- Phones and tablets automatically prefer the rear camera (`facingMode:
+  environment`); laptops and desktops use the available webcam/USB camera.
 - After a scan, the result screen shows the **registered location** and
   **registered coordinates**, the **actual scanned coordinates**, GPS accuracy,
   scan time, a distance check, a **map preview**, **View on Map** and
@@ -556,7 +557,7 @@ require `Authorization: Bearer <token>`.
 - All report generation is centralized in the Reports Center: serviceable, unserviceable, by office, overall master list, PPE, semi-expendable, and procurement forecast reports.
 - Role-based permissions (GSO-OIC, Inspectorate, GSO Staff, Office Head).
 - Dark mode, search, backup/restore, sync center.
-- Search totals and an asset-type summary showing how many laptops, desktops, printers, chairs, and other equipment types are on record.
+- Search totals and a matching-assets summary by type for each search.
 - Server-side authentication, audit trail, and account administration.
 - **GSO-OIC notifications** for asset actions with real-time updates, read/unread status, and full previous/updated details.
 - Offline support and installable PWA (reads the last synced copy).

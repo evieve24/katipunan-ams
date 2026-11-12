@@ -148,12 +148,12 @@ notify the OIC as before.
 
 ### UI additions
 
-- Mobile scanner: camera selector, **Start**, **Stop**, **Scan Again**, and
-  **Close** buttons, existing tap-to-scan, image upload, demo scan.
+- Mobile scanner: starts automatically when opened and continues scanning until
+  a QR code is detected. Asset Details opens automatically; only the topbar
+  close button is shown.
 - QR-only decoding, native BarcodeDetector where available, 30 FPS, and an
   adaptive scan box for faster detection.
-- Scanner modal: camera selector, **Start**, **Stop**, **Scan Again** buttons,
-  image upload.
+- Scanner modal: camera selector, **Start**, **Stop**, **Scan Again** buttons.
 - Result screens (mobile and modal): registered vs scanned coordinates,
   accuracy, scan time, distance check, map preview, Google Maps buttons,
   retry location, scan/location history, online/offline/pending indicator.
@@ -166,11 +166,11 @@ notify the OIC as before.
 
 ### Camera/device behaviour
 
-- Laptop/desktop webcam: modal or mobile scanner; camera selector lists
-  devices from `Html5Qrcode.getCameras()`.
-- USB webcam: same device list.
-- Android/iPhone/iPad: `facingMode: environment` selects the rear camera by
-  default; device selection is also available.
+- Laptop/desktop webcam: modal or auto-starting mobile scanner.
+- USB webcam: available to the desktop scanner modal and as the default mobile
+  scanner camera.
+- Android/iPhone/iPad: `facingMode: environment` selects the rear camera
+  automatically.
 - Installed PWA: the shell and scanner libraries are cached; camera and
   geolocation work subject to browser permission/secure-origin rules.
 - Camera access requires `localhost` or HTTPS. Geolocation has the same secure
