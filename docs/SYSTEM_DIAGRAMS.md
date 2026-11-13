@@ -177,36 +177,38 @@ flowchart LR
 
 ## 2. Entity Relationship Diagram
 
-The implemented schema has **17 base tables** and **20 foreign keys**. Child
-records are removed with their asset (`ON DELETE CASCADE`); historical records
-such as audit, activity, sync, and backups preserve their rows when a user is
-removed (`ON DELETE SET NULL`).
+The implemented schema has **17 base tables** and **20 foreign keys**. Each
+entity is prefixed with its matching **DFD data-store number (D1–D14)**.
+`APP_STATE` is unnumbered because it is the implementation JSON snapshot, not a
+DFD store. Child records are removed with their asset (`ON DELETE CASCADE`);
+historical records such as audit, activity, sync, and backups preserve their
+rows when a user is removed (`ON DELETE SET NULL`).
 
 ```mermaid
 erDiagram
-    USER |o--o{ ASSET : "is accountable for"
-    USER ||--o{ SESSION : owns
-    USER |o--o{ ACTIVITY_LOG : performs
-    USER |o--o{ AUDIT : "is recorded in"
-    USER |o--o{ REPORT : generates
-    USER |o--o{ BACKUP : creates
-    USER |o--o{ SYNC_EVENT : performs
-    USER |o--o{ APP_STATE : updates
-    USER |o--o{ ASSET_SCAN : performs
-    USER ||--o{ NOTIFICATION : receives
-    USER |o--o{ NOTIFICATION : acts
-    USER |o--o{ NOTIFICATION : reads
+    D1_USER |o--o{ D2_ASSET : "is accountable for"
+    D1_USER ||--o{ D1_SESSION : owns
+    D1_USER |o--o{ D10_ACTIVITY_LOG : performs
+    D1_USER |o--o{ D10_AUDIT : "is recorded in"
+    D1_USER |o--o{ D9_REPORT : generates
+    D1_USER |o--o{ D11_BACKUP : creates
+    D1_USER |o--o{ D14_SYNC_EVENT : performs
+    D1_USER |o--o{ APP_STATE : updates
+    D1_USER |o--o{ D12_ASSET_SCAN : performs
+    D1_USER ||--o{ D13_NOTIFICATION : receives
+    D1_USER |o--o{ D13_NOTIFICATION : acts
+    D1_USER |o--o{ D13_NOTIFICATION : reads
 
-    ASSET ||--o{ ASSET_LIFECYCLE : "has stage"
-    ASSET ||--o{ MAINTENANCE_RECORD : "is serviced in"
-    ASSET ||--o{ PROCUREMENT_FORECAST : "is forecast in"
-    ASSET ||--o{ BORROW : "is borrowed in"
-    ASSET ||--o{ INVENTORY : "is counted in"
-    ASSET ||--o{ ASSET_TRANSFER : "is transferred in"
-    ASSET ||--o{ ASSET_SCAN : "is scanned in"
-    ASSET |o--o{ NOTIFICATION : "is referenced in"
+    D2_ASSET ||--o{ D6_ASSET_LIFECYCLE : "has stage"
+    D2_ASSET ||--o{ D8_MAINTENANCE_RECORD : "is serviced in"
+    D2_ASSET ||--o{ D7_PROCUREMENT_FORECAST : "is forecast in"
+    D2_ASSET ||--o{ D3_BORROW : "is borrowed in"
+    D2_ASSET ||--o{ D4_INVENTORY : "is counted in"
+    D2_ASSET ||--o{ D5_ASSET_TRANSFER : "is transferred in"
+    D2_ASSET ||--o{ D12_ASSET_SCAN : "is scanned in"
+    D2_ASSET |o--o{ D13_NOTIFICATION : "is referenced in"
 
-    USER {
+    D1_USER {
         int id PK
         string username
         string name
@@ -215,7 +217,7 @@ erDiagram
         bool active
         string created_at
     }
-    SESSION {
+    D1_SESSION {
         string token PK
         int user_id FK
         string created_at
@@ -223,7 +225,7 @@ erDiagram
         string ip
         string user_agent
     }
-    ASSET {
+    D2_ASSET {
         string asset_id PK
         int user_id FK
         string asset_name
@@ -241,14 +243,14 @@ erDiagram
         bool is_trashed
         string sync_status
     }
-    ASSET_LIFECYCLE {
+    D6_ASSET_LIFECYCLE {
         int lifecycle_id PK
         string asset_id FK
         string lifecycle_stage
         string remaining_life
         string effective_date
     }
-    MAINTENANCE_RECORD {
+    D8_MAINTENANCE_RECORD {
         int maintenance_id PK
         string asset_id FK
         string maintenance_type
@@ -258,7 +260,7 @@ erDiagram
         string status
         string technician
     }
-    PROCUREMENT_FORECAST {
+    D7_PROCUREMENT_FORECAST {
         int forecast_id PK
         string asset_id FK
         int forecast_year
@@ -268,7 +270,7 @@ erDiagram
         string priority
         string bucket
     }
-    BORROW {
+    D3_BORROW {
         int borrow_id PK
         string asset_id FK
         string borrower_name
@@ -277,7 +279,7 @@ erDiagram
         string status
         string recorded_at
     }
-    INVENTORY {
+    D4_INVENTORY {
         int inventory_id PK
         string asset_id FK
         string location
@@ -285,7 +287,7 @@ erDiagram
         string capture_date
         string sync_status
     }
-    ASSET_TRANSFER {
+    D5_ASSET_TRANSFER {
         int transfer_id PK
         string asset_id FK
         string from_office
@@ -294,7 +296,7 @@ erDiagram
         string remarks
         string sync_status
     }
-    ASSET_SCAN {
+    D12_ASSET_SCAN {
         string scan_id PK
         string asset_id FK
         int user_id FK
@@ -315,14 +317,14 @@ erDiagram
         string updated_at
         int updated_by FK
     }
-    ACTIVITY_LOG {
+    D10_ACTIVITY_LOG {
         int log_id PK
         int user_id FK
         string action
         string details
         string timestamp
     }
-    AUDIT {
+    D10_AUDIT {
         int id PK
         string at
         int user_id FK
@@ -331,7 +333,7 @@ erDiagram
         string detail
         string ip
     }
-    REPORT {
+    D9_REPORT {
         int report_id PK
         int user_id FK
         string report_type
@@ -339,7 +341,7 @@ erDiagram
         string generated_at
         string file_path
     }
-    BACKUP {
+    D11_BACKUP {
         int backup_id PK
         int user_id FK
         string backup_date
@@ -347,7 +349,7 @@ erDiagram
         string storage_type
         string status
     }
-    SYNC_EVENT {
+    D14_SYNC_EVENT {
         int id PK
         string at
         string device
@@ -356,7 +358,7 @@ erDiagram
         text payload
         int user_id FK
     }
-    NOTIFICATION {
+    D13_NOTIFICATION {
         int id PK
         int recipient_user_id FK
         int actor_user_id FK
@@ -374,25 +376,28 @@ erDiagram
 
 ### 2.1 Physical table map
 
-| Logical entity | Physical table | Notes |
-| --- | --- | --- |
-| `USER` | `users` | Accounts and roles |
-| `SESSION` | `sessions` | Bearer sessions |
-| `ASSET` | `assets` | Asset register |
-| `ASSET_LIFECYCLE` | `asset_lifecycle` | Current life-cycle stage |
-| `MAINTENANCE_RECORD` | `maintenance_asset_report` | Repair and maintenance history |
-| `PROCUREMENT_FORECAST` | `procurement_forecast` | Replacement/forecast rows |
-| `BORROW` | `borrow` | Borrow and issuance history |
-| `INVENTORY` | `inventory` | Inventory snapshot |
-| `ASSET_TRANSFER` | `asset_transfer` | Office-to-office transfers |
-| `ASSET_SCAN` | `asset_scan` | QR scan and location history |
-| `APP_STATE` | `app_state` | JSON state snapshot, not a DFD store |
-| `ACTIVITY_LOG` | `activity_log` | Application activity log |
-| `AUDIT` | `audit` | Security audit trail |
-| `REPORT` | `report` | Generated-report records |
-| `BACKUP` | `backup` | Backup records |
-| `SYNC_EVENT` | `sync_events` | Device synchronization records |
-| `NOTIFICATION` | `notifications` | GSO-OIC notification feed |
+Each ERD entity is prefixed with the DFD store it implements. `APP_STATE` is
+the only exception: it is the backend JSON snapshot, not a DFD data store.
+
+| DFD store | ERD entity | Physical table | Notes |
+| --- | --- | --- | --- |
+| D1 User Data | `D1_USER` | `users` | Accounts and roles |
+| D1 User Data | `D1_SESSION` | `sessions` | Bearer sessions |
+| D2 Asset Data | `D2_ASSET` | `assets` | Asset register |
+| D3 Borrow Data | `D3_BORROW` | `borrow` | Borrow and issuance history |
+| D4 Inventory Data | `D4_INVENTORY` | `inventory` | Inventory snapshot |
+| D5 Asset Transfer Data | `D5_ASSET_TRANSFER` | `asset_transfer` | Office-to-office transfers |
+| D6 Asset Life Cycle Data | `D6_ASSET_LIFECYCLE` | `asset_lifecycle` | Current life-cycle stage |
+| D7 Forecasting Data | `D7_PROCUREMENT_FORECAST` | `procurement_forecast` | Replacement/forecast rows |
+| D8 Maintenance Data | `D8_MAINTENANCE_RECORD` | `maintenance_asset_report` | Repair and maintenance history |
+| D9 Report Data | `D9_REPORT` | `report` | Generated-report records |
+| D10 Activity Logs Data | `D10_ACTIVITY_LOG` | `activity_log` | Application activity log |
+| D10 Activity Logs Data | `D10_AUDIT` | `audit` | Security audit trail |
+| D11 Backup Data | `D11_BACKUP` | `backup` | Backup records |
+| D12 Scan and Location Data | `D12_ASSET_SCAN` | `asset_scan` | QR scan and location history |
+| D13 Notification Data | `D13_NOTIFICATION` | `notifications` | GSO-OIC notification feed |
+| D14 Sync Data | `D14_SYNC_EVENT` | `sync_events` | Device synchronization records |
+| — | `APP_STATE` | `app_state` | JSON state snapshot, not a DFD store |
 
 ---
 

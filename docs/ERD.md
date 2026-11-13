@@ -3,36 +3,39 @@
 > Consolidated DFD, ERD, and class diagrams: [`SYSTEM_DIAGRAMS.md`](SYSTEM_DIAGRAMS.md).
 
 This document records the ERD implemented in MariaDB (XAMPP), the physical
-table names, and how each entity maps to the v71 application.
+table names, and how each entity maps to the v71 application. Entity names are
+prefixed with the matching **DFD data-store number (D1–D14)**; `APP_STATE` is
+the only unnumbered entity because it is an implementation snapshot, not a DFD
+store.
 
 ## Diagram
 
 ```mermaid
 erDiagram
-    USER ||--o{ ASSET : manages
-    USER ||--o{ BACKUP : creates
-    USER ||--o{ ACTIVITY_LOG : performs
-    USER ||--o{ REPORT : generates
+    D1_USER |o--o{ D2_ASSET : manages
+    D1_USER |o--o{ D11_BACKUP : creates
+    D1_USER |o--o{ D10_ACTIVITY_LOG : performs
+    D1_USER |o--o{ D9_REPORT : generates
 
-    ASSET ||--o{ ASSET_LIFECYCLE : "goes through"
-    ASSET ||--o{ MAINTENANCE_ASSET_REPORT : "is serviced through"
-    ASSET ||--o{ PROCUREMENT_FORECAST : "is forecasted in"
-    ASSET ||--o{ BORROW : "is borrowed in"
-    ASSET ||--o{ INVENTORY : "is counted in"
-    ASSET ||--o{ ASSET_TRANSFER : "is transferred via"
-    ASSET ||--o{ ASSET_SCAN : "is scanned in"
-    ASSET |o--o{ NOTIFICATION : "is referenced in"
+    D2_ASSET ||--o{ D6_ASSET_LIFECYCLE : "goes through"
+    D2_ASSET ||--o{ D8_MAINTENANCE_RECORD : "is serviced through"
+    D2_ASSET ||--o{ D7_PROCUREMENT_FORECAST : "is forecasted in"
+    D2_ASSET ||--o{ D3_BORROW : "is borrowed in"
+    D2_ASSET ||--o{ D4_INVENTORY : "is counted in"
+    D2_ASSET ||--o{ D5_ASSET_TRANSFER : "is transferred via"
+    D2_ASSET ||--o{ D12_ASSET_SCAN : "is scanned in"
+    D2_ASSET |o--o{ D13_NOTIFICATION : "is referenced in"
 
-    USER ||--o{ SESSION : opens
-    USER |o--o{ ASSET_SCAN : performs
-    USER |o--o{ APP_STATE : updates
-    USER |o--o{ AUDIT : "is recorded in"
-    USER |o--o{ SYNC_EVENT : performs
-    USER ||--o{ NOTIFICATION : receives
-    USER |o--o{ NOTIFICATION : acts
-    USER |o--o{ NOTIFICATION : reads
+    D1_USER ||--o{ D1_SESSION : opens
+    D1_USER |o--o{ D12_ASSET_SCAN : performs
+    D1_USER |o--o{ APP_STATE : updates
+    D1_USER |o--o{ D10_AUDIT : "is recorded in"
+    D1_USER |o--o{ D14_SYNC_EVENT : performs
+    D1_USER ||--o{ D13_NOTIFICATION : receives
+    D1_USER |o--o{ D13_NOTIFICATION : acts
+    D1_USER |o--o{ D13_NOTIFICATION : reads
 
-    USER {
+    D1_USER {
         int user_id PK
         string full_name
         string username
@@ -40,7 +43,7 @@ erDiagram
         string role
         string status
     }
-    ASSET {
+    D2_ASSET {
         string asset_id PK
         int user_id FK
         string asset_name
@@ -58,14 +61,14 @@ erDiagram
         bool is_trashed
         string sync_status
     }
-    ASSET_LIFECYCLE {
+    D6_ASSET_LIFECYCLE {
         int lifecycle_id PK
         string asset_id FK
         string lifecycle_stage
         string remaining_life
         string effective_date
     }
-    MAINTENANCE_ASSET_REPORT {
+    D8_MAINTENANCE_RECORD {
         int maintenance_id PK
         string asset_id FK
         string maintenance_type
@@ -74,7 +77,7 @@ erDiagram
         decimal cost
         string status
     }
-    PROCUREMENT_FORECAST {
+    D7_PROCUREMENT_FORECAST {
         int forecast_id PK
         string asset_id FK
         int forecast_year
@@ -82,7 +85,7 @@ erDiagram
         decimal estimated_cost
         string status
     }
-    BACKUP {
+    D11_BACKUP {
         int backup_id PK
         int user_id FK
         string backup_date
@@ -90,14 +93,14 @@ erDiagram
         string storage_type
         string status
     }
-    ACTIVITY_LOG {
+    D10_ACTIVITY_LOG {
         int log_id PK
         int user_id FK
         string action
         string details
         string timestamp
     }
-    REPORT {
+    D9_REPORT {
         int report_id PK
         int user_id FK
         string report_type
@@ -105,7 +108,7 @@ erDiagram
         string generated_at
         string file_path
     }
-    SESSION {
+    D1_SESSION {
         string token PK
         int user_id FK
         string created_at
@@ -113,7 +116,7 @@ erDiagram
         string ip
         string user_agent
     }
-    ASSET_SCAN {
+    D12_ASSET_SCAN {
         string scan_id PK
         string asset_id FK
         int user_id FK
@@ -134,7 +137,7 @@ erDiagram
         string updated_at
         int updated_by FK
     }
-    AUDIT {
+    D10_AUDIT {
         int id PK
         string at
         int user_id FK
@@ -143,7 +146,7 @@ erDiagram
         string detail
         string ip
     }
-    SYNC_EVENT {
+    D14_SYNC_EVENT {
         int id PK
         string at
         string device
@@ -152,7 +155,7 @@ erDiagram
         longtext payload
         int user_id FK
     }
-    NOTIFICATION {
+    D13_NOTIFICATION {
         int id PK
         int recipient_user_id FK
         int actor_user_id FK
@@ -166,7 +169,7 @@ erDiagram
         string read_at
         int read_by FK
     }
-    BORROW {
+    D3_BORROW {
         int borrow_id PK
         string asset_id FK
         string borrower_name
@@ -174,7 +177,7 @@ erDiagram
         string return_date
         string status
     }
-    INVENTORY {
+    D4_INVENTORY {
         int inventory_id PK
         string asset_id FK
         string location
@@ -182,7 +185,7 @@ erDiagram
         string capture_date
         string sync_status
     }
-    ASSET_TRANSFER {
+    D5_ASSET_TRANSFER {
         int transfer_id PK
         string asset_id FK
         string from_office
@@ -212,30 +215,29 @@ LIMIT 20;
 
 ## Physical tables
 
-| ERD entity | MariaDB table | Notes |
-| --- | --- | --- |
-| `USER` | `users` | Existing account table. `user_id` = `id`, `full_name` = `name`, `password` = `password_hash` (PBKDF2-SHA256), `status` = `active`. |
-| `ASSET` | `assets` | One row per equipment record; `asset_id` is the app's equipment ID (e.g. `HR-EQ1`). |
-| `ASSET_LIFECYCLE` | `asset_lifecycle` | Current stage and remaining useful life per asset. |
-| `MAINTENANCE_ASSET_REPORT` | `maintenance_asset_report` | Repair / maintenance history. |
-| `PROCUREMENT_FORECAST` | `procurement_forecast` | One forecast row per asset per year. |
-| `BACKUP` | `backup` | Server JSON exports and recorded client backups. |
-| `ACTIVITY_LOG` | `activity_log` | The app's activity log (`mets_log`). |
-| `REPORT` | `report` | Generated report records (CSV, print, summary). |
-| `BORROW` | `borrow` | Borrow / issuance records. |
-| `INVENTORY` | `inventory` | Current location and capture date per asset. |
-| `ASSET_TRANSFER` | `asset_transfer` | Transfer history between offices. |
+ERD entities are prefixed with the matching DFD store number. `APP_STATE` is
+the only unnumbered entity because it is the backend JSON snapshot, not a DFD
+data store.
 
-## Operational tables
-
-| Table | Purpose |
-| --- | --- |
-| `sessions` | Bearer login sessions |
-| `audit` | Server-side security/audit trail |
-| `sync_events` | Device sync records |
-| `notifications` | GSO-OIC activity feed generated automatically by the backend |
-| `asset_scan` | One row per QR scan: client idempotency key (`scan_id`), asset, user, role snapshot, latitude/longitude/accuracy, scan time, activity, source, device, and IP. This is the authoritative scan/location history. It never modifies the asset's registered location or registered coordinates. |
-| `app_state` | Backend JSON snapshot for state hydration and offline synchronization. It is not a DFD data store. |
+| DFD store | ERD entity | MariaDB table | Notes |
+| --- | --- | --- | --- |
+| D1 User Data | `D1_USER` | `users` | Existing account table. `user_id` = `id`, `full_name` = `name`, `password` = `password_hash` (PBKDF2-SHA256), `status` = `active`. |
+| D1 User Data | `D1_SESSION` | `sessions` | Bearer login sessions. |
+| D2 Asset Data | `D2_ASSET` | `assets` | One row per equipment record; `asset_id` is the app's equipment ID. |
+| D3 Borrow Data | `D3_BORROW` | `borrow` | Borrow / issuance records. |
+| D4 Inventory Data | `D4_INVENTORY` | `inventory` | Current location and capture date per asset. |
+| D5 Asset Transfer Data | `D5_ASSET_TRANSFER` | `asset_transfer` | Transfer history between offices. |
+| D6 Asset Life Cycle Data | `D6_ASSET_LIFECYCLE` | `asset_lifecycle` | Current stage and remaining useful life per asset. |
+| D7 Forecasting Data | `D7_PROCUREMENT_FORECAST` | `procurement_forecast` | One forecast row per asset per year. |
+| D8 Maintenance Data | `D8_MAINTENANCE_RECORD` | `maintenance_asset_report` | Repair / maintenance history. |
+| D9 Report Data | `D9_REPORT` | `report` | Generated report records (CSV, print, summary). |
+| D10 Activity Logs Data | `D10_ACTIVITY_LOG` | `activity_log` | The app's activity log (`mets_log`). |
+| D10 Activity Logs Data | `D10_AUDIT` | `audit` | Server-side security/audit trail. |
+| D11 Backup Data | `D11_BACKUP` | `backup` | Server JSON exports and recorded client backups. |
+| D12 Scan and Location Data | `D12_ASSET_SCAN` | `asset_scan` | Per-scan history with coordinates and actor details. |
+| D13 Notification Data | `D13_NOTIFICATION` | `notifications` | GSO-OIC activity feed generated by the backend. |
+| D14 Sync Data | `D14_SYNC_EVENT` | `sync_events` | Device synchronization records. |
+| — | `APP_STATE` | `app_state` | Backend JSON snapshot; not a DFD data store. |
 
 ### Why `asset_scan` exists
 
