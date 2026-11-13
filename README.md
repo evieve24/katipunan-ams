@@ -202,6 +202,12 @@ Default Project/
   read-only and duplicate IDs are rejected.
 - On sign-in the browser **hydrates** from the server; after that every change
   is written through to the server (debounced auto-save).
+- Equipment additions and updates are persisted immediately. Every signed-in
+  browser checks a tiny state-version hash every few seconds and, when another
+  user changes shared data, hydrates the latest snapshot and re-renders the
+  current screen **in place** — no page reload, so filters, scroll position,
+  and navigation are preserved. Open forms and modals defer the refresh until
+  the user finishes the current entry.
 - Device-only values (`mets_pin`, `mets_password`, `mets_username`,
   `mets_lock_type`, `mets_cred_overrides`, the sync queue, the signed-in
   display name/user/department, theme, camera choice, sidebar state, and local
@@ -533,7 +539,8 @@ require `Authorization: Bearer <token>`.
 | GET | `/api/config` | Public configuration (Google client ID) |
 | POST | `/api/config` | Save the Google OAuth client ID (GSO-OIC) |
 | POST | `/api/auth/password` | Change own password |
-| GET | `/api/state` | Full application state |
+| GET | `/api/state/version` | Lightweight content-hash version for cross-user refresh |
+| GET | `/api/state` | Full application state (`version`, `updated_at`) |
 | PUT | `/api/state` | Save state keys (`{"updates":{...}}`) |
 | POST | `/api/state/reset` | Wipe state (GSO-OIC, `{"confirm":"RESET"}`) |
 | GET | `/api/assets` | Flattened asset list (`q`, `status`, `dept`, `limit`, `offset`) |

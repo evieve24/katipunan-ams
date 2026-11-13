@@ -19,6 +19,7 @@ function syncPushHistory(h){const a=syncHistory();a.unshift(h);localStorage.setI
   }catch(e){console.warn('Local asset restore failed',e);}
 })();
 function persistAssets(){
+  if(window.__KAT_REMOTE_HYDRATE__)return;
   try{const j=JSON.stringify(staffData);if(j!==_lastSnap){localStorage.setItem(SYNC_STORE,j);_lastSnap=j;}}
   catch(e){console.warn('Local save failed (storage full?)',e);}
 }
@@ -677,4 +678,249 @@ window.resetPasswordCredentials=function(){
     e.textContent='';
     return rp.apply(this,arguments);
   };
+})();
+
+/* ── Cross-user refresh (in place, no page reload) ───────────────────────
+   Every signed-in browser asks for a tiny content-hash version. When another
+   user adds or updates equipment, the latest shared state is hydrated into
+   memory/localStorage and the current screen is re-rendered. The page is
+   never reloaded, so open filters, scroll position, and navigation survive. */
+(function(){
+  'use strict';
+  const TOKEN_KEY='kat_token';
+  const SENSITIVE={
+    mets_pin:1,mets_password:1,mets_username:1,mets_lock_type:1,
+    mets_pending_sync:1,mets_device_id:1,mets_cred_overrides:1,mets_accounts:1,
+    mets_admin_name:1,mets_admin_user:1,mets_admin_dept:1,
+    mets_theme:1,mets_camera_id:1,mets_sidebar_collapsed:1,
+    mets_last_backup_drive:1,mets_sync_history:1
+  };
+  const POLL_MS=5000;
+  let lastVersion=window.__KAT_STATE_VERSION__||'';
+  let timer=null,checking=false,deferred=false,deferredNotified=false;
+
+  function token(){
+    try{return localStorage.getItem(TOKEN_KEY)||'';}catch(e){return '';}
+  }
+  function sharedKey(key){
+    return typeof key==='string'&&key.indexOf('mets_')===0&&!SENSITIVE[key];
+  }
+  function parse(raw,fallback){
+    try{return JSON.parse(raw);}catch(e){return fallback;}
+  }
+  function busy(){
+    if(document.querySelector('.modal-overlay.open'))return true;
+    const ae=document.activeElement;
+    if(ae&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)&&ae.id!=='searchInput'&&!ae.readOnly&&!ae.disabled)return true;
+    return false;
+  }
+  function notifyDeferred(){
+    if(deferredNotified)return;
+    deferredNotified=true;
+    if(typeof window.showSyncToast==='function'){
+      window.showSyncToast('🔄 New updates are ready — they will appear when you finish this entry');
+    }
+  }
+
+  function applyState(state){
+    let changed=false,staffChanged=false;
+    const beforeStaff=JSON.stringify(staffData);
+    window.__KAT_REMOTE_HYDRATE__=true;
+    try{
+      Object.keys(state||{}).forEach(function(key){
+        if(!sharedKey(key)||typeof state[key]!=='string')return;
+        const value=state[key];
+        if(key==='mets_staffdata'){
+          if(value===beforeStaff)return;
+          const parsed=parse(value,null);
+          if(!parsed||typeof parsed!=='object')return;
+          Object.keys(staffData).forEach(function(k){delete staffData[k];});
+          Object.keys(parsed).forEach(function(k){
+            if(Array.isArray(parsed[k]))staffData[k]=parsed[k];
+          });
+          _lastSnap=JSON.stringify(staffData);
+          staffChanged=true;changed=true;
+        }else{
+          let previous=null;
+          try{previous=localStorage.getItem(key);}catch(e){}
+          if(previous===value)return;
+          if(key==='mets_log'){
+            const arr=parse(value,[]);
+            if(!Array.isArray(arr))return;
+            activityLog.length=0;
+            arr.forEach(function(entry){activityLog.push(entry);});
+          }else if(key==='mets_photos'){
+            const obj=parse(value,{});
+            if(!obj||typeof obj!=='object')return;
+            Object.keys(photoStore).forEach(function(k){delete photoStore[k];});
+            Object.assign(photoStore,obj);
+          }else if(key==='mets_recycle'){
+            const arr=parse(value,[]);
+            if(!Array.isArray(arr))return;
+            recycleBin.length=0;
+            arr.forEach(function(item){recycleBin.push(item);});
+          }
+          changed=true;
+        }
+        try{localStorage.setItem(key,value);}catch(e){}
+      });
+    }finally{
+      window.__KAT_REMOTE_HYDRATE__=false;
+    }
+
+    if(staffChanged){
+      try{
+        if(typeof currentDeptId!=='undefined'&&currentDeptId){
+          currentDeptStaff=staffData[currentDeptId]||[];
+        }
+        if(typeof currentStaff!=='undefined'&&currentStaff){
+          const dept=currentDeptId||Object.keys(staffData).find(function(k){
+            return Array.isArray(staffData[k])&&staffData[k].some(function(s){return s.id===currentStaff.id;});
+          });
+          const fresh=dept?((staffData[dept]||[]).find(function(s){return s.id===currentStaff.id;})):null;
+          if(fresh)currentStaff=fresh;
+        }
+      }catch(e){}
+    }
+    return {changed:changed,staffChanged:staffChanged};
+  }
+
+  function refreshView(result){
+    const active=document.querySelector('.view.active');
+    const id=active&&active.id?active.id.replace(/^view-/,''):'';
+    const scrollY=window.scrollY||window.pageYOffset||0;
+    const previousSilent=window.__KAT_SILENT_REFRESH__;
+    window.__KAT_SILENT_REFRESH__=true;
+    try{
+      if(id==='dashboard'){
+        if(typeof window.updateDashStats==='function')window.updateDashStats();
+        if(typeof window.buildAlertsPanel==='function')window.buildAlertsPanel();
+        if(typeof window.buildStatusChart==='function')window.buildStatusChart();
+      }else if(id==='equipment'){
+        if(typeof window.renderEquipmentMaster==='function')window.renderEquipmentMaster();
+      }else if(id==='search'){
+        const q=((document.getElementById('searchInput')||{}).value||'').trim();
+        if(q&&typeof window.performSearch==='function')window.performSearch(q);
+      }else if(id==='staff'){
+        if(typeof currentDeptId!=='undefined'&&currentDeptId&&typeof window.showStaff==='function'){
+          window.showStaff(currentDeptId);
+        }
+      }else if(id==='profile'){
+        if(typeof currentStaff!=='undefined'&&currentStaff&&typeof window.showProfile==='function'){
+          const stack=navStack.slice();
+          window.showProfile(currentStaff);
+          navStack=stack;
+          if(navStack.length){
+            navStack[navStack.length-1]={label:currentStaff.name,fn:function(){window.showProfile(currentStaff);}};
+          }
+        }
+      }else if(id==='municipal'){
+        if(typeof window.renderMunicipalView==='function')window.renderMunicipalView();
+      }else if(id==='dept'){
+        if(typeof currentOfficeId!=='undefined'&&currentOfficeId&&typeof window.showOfficeDept==='function'){
+          window.showOfficeDept(currentOfficeId);
+        }
+      }else if(id==='gsorecords'){
+        if(typeof window.updateGSORecordsBadge==='function')window.updateGSORecordsBadge();
+        if(typeof currentGSOTab!=='undefined'&&typeof window.renderGSOTab==='function'){
+          window.renderGSOTab(currentGSOTab);
+        }
+      }else if(id==='recyclebin'){
+        if(typeof window.renderRecycleBin==='function')window.renderRecycleBin();
+      }else if(id==='activitylog'){
+        if(typeof window.showActivityLog==='function')window.showActivityLog();
+      }else if(id==='lifecycle'){
+        if(typeof window.lcRender==='function')window.lcRender();
+      }else if(id==='synccenter'){
+        if(typeof window.syncRender==='function')window.syncRender();
+      }
+    }catch(e){
+      console.warn('In-place refresh failed',e);
+    }finally{
+      window.__KAT_SILENT_REFRESH__=previousSilent;
+    }
+    try{window.scrollTo(0,scrollY);}catch(e){}
+    if(result&&result.staffChanged&&typeof window.showSyncToast==='function'){
+      window.showSyncToast('🔄 Equipment list updated');
+    }
+  }
+
+  async function hydrate(version){
+    const res=await fetch('/api/state',{
+      headers:{Authorization:'Bearer '+token()},
+      cache:'no-store'
+    });
+    if(res.status===401||res.status===403)return;
+    if(!res.ok)return;
+    const data=await res.json().catch(function(){return {};});
+    const result=applyState((data&&data.state)||{});
+    lastVersion=(data&&(data.version||data.updated_at))||version;
+    window.__KAT_STATE_VERSION__=lastVersion;
+    deferred=false;deferredNotified=false;
+    if(result.changed)refreshView(result);
+  }
+
+  async function check(force){
+    if(checking||!token()||!navigator.onLine)return;
+    if(document.hidden&&!force)return;
+    checking=true;
+    try{
+      const res=await fetch('/api/state/version',{
+        headers:{Authorization:'Bearer '+token()},
+        cache:'no-store'
+      });
+      if(res.status===401||res.status===403)return;
+      if(!res.ok)return;
+      const data=await res.json().catch(function(){return {};});
+      const version=(data&&(data.version||data.updated_at))||'';
+      if(!version)return;
+      if(!lastVersion){
+        lastVersion=version;
+        window.__KAT_STATE_VERSION__=version;
+        return;
+      }
+      if(version===lastVersion)return;
+      if(busy()){
+        deferred=true;
+        notifyDeferred();
+        return;
+      }
+      await hydrate(version);
+    }catch(e){
+      /* Offline or a temporary server error: try again on the next poll. */
+    }finally{
+      checking=false;
+    }
+  }
+
+  function start(){
+    if(timer)clearInterval(timer);
+    timer=setInterval(function(){check(false);},POLL_MS);
+    setTimeout(function(){check(false);},1200);
+  }
+
+  const sv=window.showView;
+  if(typeof sv==='function'){
+    window.showView=function(id){
+      const result=sv.apply(this,arguments);
+      if(!window.__KAT_SILENT_REFRESH__&&/^(dashboard|equipment|staff|profile|search|municipal|dept|gsorecords|recyclebin|activitylog|lifecycle|synccenter)$/.test(String(id))){
+        setTimeout(function(){check(false);},150);
+      }
+      return result;
+    };
+  }
+
+  document.addEventListener('visibilitychange',function(){
+    if(!document.hidden)check(true);
+  });
+  window.addEventListener('online',function(){setTimeout(function(){check(true);},400);});
+  document.addEventListener('click',function(){
+    if(deferred)setTimeout(function(){check(false);},250);
+  },true);
+  document.addEventListener('focusout',function(){
+    if(deferred)setTimeout(function(){check(false);},250);
+  },true);
+
+  window.KatLiveRefresh={check:check,hydrate:hydrate,applyState:applyState,refreshView:refreshView};
+  start();
 })();

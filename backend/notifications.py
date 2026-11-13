@@ -834,6 +834,23 @@ def _insert_for_recipient(
     }
 
 
+def _existing_asset_ids(con: Database, events: list[dict]) -> set[str]:
+    """Return the asset IDs that currently exist in the normalized table."""
+    ids = {
+        str(event.get("asset_id"))
+        for event in events
+        if event.get("asset_id")
+    }
+    if not ids:
+        return set()
+    placeholders = ",".join(["%s"] * len(ids))
+    rows = con.execute(
+        f"SELECT asset_id FROM assets WHERE asset_id IN ({placeholders})",
+        tuple(ids),
+    ).fetchall()
+    return {str(row["asset_id"]) for row in rows}
+
+
 def insert_notifications(con: Database, events: list[dict], actor) -> list[dict]:
     """Insert one row per authorized recipient, excluding the actor."""
     if not events:
@@ -844,6 +861,14 @@ def insert_notifications(con: Database, events: list[dict], actor) -> list[dict]
     ).fetchall()
     if not users:
         return []
+
+    # Never let a stale/deleted asset ID break the notification insert. The
+    # asset name and details are still kept, only the FK link is dropped.
+    existing_assets = _existing_asset_ids(con, events)
+    for event in events:
+        asset_id = event.get("asset_id")
+        if asset_id and str(asset_id) not in existing_assets:
+            event["asset_id"] = None
 
     now = iso_now()
     inserted: list[dict] = []

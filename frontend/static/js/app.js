@@ -2505,6 +2505,9 @@ function showSettings(){
 // ACTIVITY LOG
 // ══════════════════════════════════════════════════════════
 function logAction(msg){
+  // Background refreshes must not create new log entries (which would echo
+  // back to the server and trigger refreshes on every other client).
+  if(window.__KAT_SILENT_REFRESH__)return;
   const user=(typeof currentGSOUser!=='undefined'&&currentGSOUser&&currentGSOUser.name)||document.getElementById('oicNameInput')?.value||'GSO Admin';
   let geo=null;try{if(typeof currentLocation!=='undefined'&&currentLocation&&currentLocation.lat!=null)geo=currentLocation.lat.toFixed(5)+', '+currentLocation.lng.toFixed(5);}catch(e){}
   const entry={msg,time:new Date().toLocaleString('en-PH'),user,geo};
@@ -3065,6 +3068,7 @@ function saveAddEquipment(){
     const s=list.find(x=>x.id===addEqTargetStaffId);
     if(s){s.equipment=s.equipment||[];s.equipment.push(newEq);break;}
   }
+  if(typeof persistAssets==='function')persistAssets();
   document.getElementById('addEquipmentModal').classList.remove('open');
   logAction(`Added equipment ${id} (${name})`);
   showSyncToast(`✅ Equipment ${name} added`);
@@ -3189,6 +3193,7 @@ function saveEditEquipment(){
             const regAt=document.getElementById('editEqRegAt').value;
             if(regAt)eq.regAt=regAt;
           }
+          if(typeof persistAssets==='function')persistAssets();
           document.getElementById('editEquipmentModal').classList.remove('open');
           logAction(`Edited equipment ${origId} (${eq.name})`);
           showSyncToast(`✏️ ${eq.name} updated`);

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import mimetypes
 import os
@@ -53,6 +54,19 @@ from notifications import (
 )
 from state import find_asset, state_json
 from utils import iso_now, iso_plus, json_bytes
+
+# Only these shared keys affect equipment views. Activity-log-only writes do
+# not need to wake every other browser, so they are excluded from the version.
+LIVE_STATE_KEYS = (
+    "mets_staffdata",
+    "mets_photos",
+    "mets_recycle",
+    "mets_repairs",
+    "mets_borrows",
+    "mets_transfers",
+    "mets_updates",
+    "mets_slip_counter",
+)
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -294,6 +308,8 @@ class Handler(BaseHTTPRequestHandler):
             self._api_logout(user)
         elif path == "/api/auth/password" and method == "POST":
             self._api_change_password(user)
+        elif path == "/api/state/version" and method == "GET":
+            self._api_state_version(user)
         elif path == "/api/state" and method == "GET":
             self._api_state_get(user)
         elif path == "/api/state" and method in ("PUT", "POST"):
@@ -645,6 +661,57 @@ class Handler(BaseHTTPRequestHandler):
 
     # ----- state endpoints ------------------------------------------------
 
+    @staticmethod
+    def _version_from_state(state: dict[str, str]) -> str:
+        """Compute the same content hash from an already-loaded snapshot."""
+        digest = hashlib.sha256()
+        first = True
+        for key in sorted(state):
+            if key not in LIVE_STATE_KEYS:
+                continue
+            if not first:
+                digest.update(b"|")
+            first = False
+            digest.update(key.encode("utf-8"))
+            digest.update(b":")
+            digest.update(hashlib.md5(state[key].encode("utf-8")).hexdigest().encode("ascii"))
+        return "empty" if first else digest.hexdigest()
+
+    @staticmethod
+    def _state_version(con) -> tuple[str, str | None, int]:
+        """Content hash that changes on equipment-relevant state writes."""
+        con.execute("SET SESSION group_concat_max_len = 1000000")
+        placeholders = ",".join(["%s"] * len(LIVE_STATE_KEYS))
+        row = con.execute(
+            "SELECT SHA2(GROUP_CONCAT("
+            "CONCAT(`key`, ':', MD5(`value`))"
+            f" ORDER BY `key` SEPARATOR '|'), 256) AS version,"
+            " MAX(updated_at) AS updated_at, COUNT(*) AS n FROM app_state"
+            f" WHERE `key` IN ({placeholders})",
+            LIVE_STATE_KEYS,
+        ).fetchone()
+        return (
+            (row["version"] or "empty") if row else "empty",
+            (row["updated_at"] if row else None),
+            int((row["n"] or 0) if row else 0),
+        )
+
+    def _api_state_version(self, user) -> None:
+        con = connect()
+        try:
+            version, updated, _count = self._state_version(con)
+            self._json(
+                200,
+                {
+                    "ok": True,
+                    "version": version,
+                    "updated_at": updated,
+                    "serverTime": iso_now(),
+                },
+            )
+        finally:
+            con.close()
+
     def _api_state_get(self, user) -> None:
         con = connect()
         try:
@@ -652,12 +719,14 @@ class Handler(BaseHTTPRequestHandler):
                 "SELECT `key`, `value`, updated_at FROM app_state ORDER BY `key`"
             ).fetchall()
             state = {row["key"]: row["value"] for row in rows}
+            version = self._version_from_state(state)
             updated = max((row["updated_at"] for row in rows), default=None)
             self._json(
                 200,
                 {
                     "ok": True,
                     "state": state,
+                    "version": version,
                     "updated_at": updated,
                     "user": public_user(user),
                     "serverTime": iso_now(),
@@ -712,13 +781,14 @@ class Handler(BaseHTTPRequestHandler):
                         (key, value, now, user["id"]),
                     )
             new_state = get_state(con)
+            # Refresh the normalized ERD tables first: new assets must exist
+            # before notifications can reference them through the asset FK.
+            if ERD_STATE_KEYS.intersection(cleaned):
+                sync_erd(con, new_state, user["id"])
             notify_entries: list = []
             if NOTIFY_STATE_KEYS.intersection(cleaned):
                 events = diff_state(old_state, new_state)
                 notify_entries = insert_notifications(con, events, user)
-            # Refresh the normalized ERD tables in the same transaction.
-            if ERD_STATE_KEYS.intersection(cleaned):
-                sync_erd(con, new_state, user["id"])
             audit(
                 con,
                 user,
@@ -726,6 +796,7 @@ class Handler(BaseHTTPRequestHandler):
                 f"keys={','.join(sorted(cleaned))}; bytes={total}",
                 self._client_ip(),
             )
+            version, state_updated, _count = self._state_version(con)
             con.commit()
             publish_notifications(notify_entries)
             self._json(
@@ -733,7 +804,8 @@ class Handler(BaseHTTPRequestHandler):
                 {
                     "ok": True,
                     "saved": len(cleaned),
-                    "updated_at": now,
+                    "version": version,
+                    "updated_at": state_updated or now,
                     "serverTime": now,
                 },
             )
@@ -926,7 +998,6 @@ class Handler(BaseHTTPRequestHandler):
             event = diff_asset_snapshot(
                 before_snapshot, after_snapshot, asset_id, "asset_patch"
             )
-            notify_entries = insert_notifications(con, [event], user) if event else []
             now = iso_now()
             con.execute(
                 "INSERT INTO app_state (`key`, `value`, updated_at, updated_by) VALUES (%s,%s,%s,%s)"
@@ -939,7 +1010,9 @@ class Handler(BaseHTTPRequestHandler):
                     user["id"],
                 ),
             )
+            # Keep the ERD asset row in place before inserting notifications.
             sync_erd(con, get_state(con), user["id"])
+            notify_entries = insert_notifications(con, [event], user) if event else []
             audit(
                 con,
                 user,
