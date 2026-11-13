@@ -85,6 +85,7 @@ flowchart LR
   OIC([GSO-OIC])
   INS([Inspectorate Personnel])
   GSO([GSO Office Personnel])
+  HEAD([Municipal Office Head])
   DEV([Browser / Device])
   GD([Google Drive])
 
@@ -92,7 +93,7 @@ flowchart LR
     P1["1.0 Manage User"]
     P41["4.1 Scan QR and Capture Location"]
     P11["11.0 Backup"]
-    P12["12.0 Notify GSO-OIC"]
+    P12["12.0 Role-Based Notifications"]
     P13["13.0 Sign-up and Approval"]
     P14["14.0 Offline Sync"]
   end
@@ -108,9 +109,13 @@ flowchart LR
     D14[(D14 Sync Data)]
   end
 
-  OIC --> P12
+  P41 -.-> P12
+  P13 -.-> P12
   P12 --> D13
-  D13 --> OIC
+  D13 -->|role alerts| OIC
+  D13 -->|role alerts| INS
+  D13 -->|role alerts| GSO
+  D13 -->|office alerts| HEAD
 
   INS --> P41
   GSO --> P41

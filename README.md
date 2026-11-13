@@ -106,7 +106,7 @@ Default Project/
 │       │   ├── sync.js
 │       │   ├── google-drive.js  # Account, storage, and Drive sync panel
 │       │   ├── scan-sync.js     # IndexedDB scan queue and scan-history sync
-│       │   ├── notifications.js # GSO-OIC live notification panel
+│       │   ├── notifications.js # Role-based live notification panel
 │       │   ├── procurement-forecast.js
 │       │   ├── lock-type.js / lock-pin.js / settings-columns.js
 │       │   ├── landing.js / sw-register.js
@@ -159,7 +159,7 @@ Default Project/
 | `frontend/static/js/sync.js` | Local persistence, sync queue, and device sync helpers. |
 | `frontend/static/js/google-drive.js` | Account panel, server/Drive storage, Google OAuth connection, sync status. |
 | `frontend/static/js/scan-sync.js` | IndexedDB queue for offline scans, automatic `/api/scans` synchronization, and online/offline/pending indicators. |
-| `frontend/static/js/notifications.js` | GSO-OIC notification card, panel, details, read state, and SSE feed. |
+| `frontend/static/js/notifications.js` | Role-based notification bell, panel, details, read state, click-through navigation, and SSE feed. |
 | `frontend/static/js/procurement-forecast.js` | Procurement forecasting module. |
 | `frontend/static/js/lock-type.js`, `lock-pin.js` | Screen lock type and PIN/password screens. |
 | `frontend/static/js/settings-columns.js` | Settings column manager. |
@@ -350,36 +350,43 @@ If the popup is blocked, allow popups for this site.
 
 Disconnecting leaves existing backups in Drive and keeps LGU server sync active.
 
-## GSO-OIC notifications
+## Role-based notifications
 
-The backend automatically notifies the **GSO-OIC** when an authorized non-OIC
-user changes asset data or records an asset transaction.
+The backend automatically sends notifications to the users whose role and
+office make an event relevant to them. The GSO-OIC receives all operational
+events; GSO Staff receive asset and transaction events; Inspectorate personnel
+receive condition, repair, scan, inventory, and transfer events; Office Heads
+receive events only for assets in their own office.
 
 Detected activities include:
 
 - Adding, editing, or removing an asset.
 - Changing condition, location, custody, or other asset fields.
 - Submitting or updating a repair request.
-- Issuing/borrowing equipment, approving or rejecting a borrow, and returning it.
+- Issuing/borrowing equipment, approving or rejecting a borrow, returning it,
+  and daily reminders for overdue borrows.
 - Transferring an asset between departments or custodians.
 - Inventory scans and location updates.
+- New account sign-ups, account approvals, report generation, and backups.
 
 Each record stores the actor's name and role, action, affected asset, date and
 exact time, details, and a previous/updated field table.
 
-- The GSO-OIC dashboard has a **Notifications** card.
-- The topbar bell opens the full panel with **All**, **Unread**, and **Alerts**
-  tabs, **Mark all read**, and a details modal. The Alerts tab replaces the old
-  separate equipment-alert bell and lists damaged, unserviceable, lost, and
-  missing assets with their accountable person.
+- The notification bell is available on the main application pages for every
+  signed-in role, with **All**, **Unread**, and **Alerts** tabs, **Mark all
+  read**, and a details modal.
+- The Alerts tab lists damaged, unserviceable, lost, and missing assets visible
+  to the current role.
+- Clicking a notification opens the corresponding asset, report, settings, sync,
+  or account record. The small **ℹ** button opens the full change details.
 - New notifications arrive through **SSE** (`/api/notifications/stream`) without
-  refreshing the page.
-- Read/unread state is stored per GSO-OIC account in MySQL.
+  refreshing the page; polling is used as a fallback.
+- Read/unread state is stored per user account in MySQL.
 - Notifications are generated only by the backend from authenticated state
-  changes and asset PATCH requests. There is no client endpoint that can create
-  notification text, and non-OIC users cannot read or modify the feed.
-- The actor is not notified of their own action; other active GSO-OIC accounts
-  are.
+  changes, asset PATCH requests, reports, backups, scans, and account actions.
+  There is no client endpoint that can create notification text.
+- Each user can only list, read, or mark read their own notifications.
+- The actor is not notified of their own action.
 - The table is `notifications` in `katipunan_ams`; the UI is
   `frontend/static/js/notifications.js`.
 
@@ -534,10 +541,10 @@ require `Authorization: Bearer <token>`.
 | GET | `/api/scans` | Asset scan and location history (`asset_id`, `limit`) |
 | GET | `/api/stats` | Asset / personnel / repair totals |
 | GET | `/api/storage` | Database, application-state, and backup storage totals |
-| GET | `/api/notifications` | GSO-OIC notifications (`limit`, `unread`) |
-| GET | `/api/notifications/stream` | Real-time SSE notification stream |
-| POST | `/api/notifications/{id}/read` | Mark one notification read |
-| POST | `/api/notifications/read-all` | Mark all notifications read |
+| GET | `/api/notifications` | Role-scoped notifications for the signed-in user (`limit`, `unread`) |
+| GET | `/api/notifications/stream` | Real-time SSE notification stream for the signed-in user |
+| POST | `/api/notifications/{id}/read` | Mark one of the signed-in user's notifications read |
+| POST | `/api/notifications/read-all` | Mark all of the signed-in user's notifications read |
 | GET | `/api/activity` | Activity log |
 | POST | `/api/sync` | Record device sync events |
 | GET/POST | `/api/users` | List / create accounts (GSO-OIC) |
@@ -567,7 +574,7 @@ require `Authorization: Bearer <token>`.
 - Dark mode, search, backup/restore, sync center.
 - Search totals and a matching-assets summary by type for each search.
 - Server-side authentication, audit trail, and account administration.
-- **GSO-OIC notifications** for asset actions with real-time updates, read/unread status, and full previous/updated details.
+- **Role-based notifications** for asset actions, approvals, reports, backups, scans, and reminders, with real-time updates, read/unread status, click-through navigation, and full previous/updated details.
 - Offline support and installable PWA (reads the last synced copy).
 
 ## Notes

@@ -15,7 +15,7 @@ A visual version is in [`DFD_DIAGRAM.md`](DFD_DIAGRAM.md).
 - Every process in the original DFD (1.0–11.0) is still implemented.
 - The final system adds:
   - **4.1 QR Scan & Location Capture**
-  - **12.0 GSO-OIC Notifications**
+  - **12.0 Role-Based Notifications**
   - **13.0 Sign-up & Approval**
   - **14.0 Offline Scan Synchronization**
   - **D12 Scan & Location Data**
@@ -54,7 +54,7 @@ normalized tables on save.
 | 9.0 Generate Report | Report generation and history (`report`, `/api/reports`) |
 | 10.0 Activity Logs | Application activity and security audit (`activity_log`, `audit`) |
 | 11.0 Backup | Server JSON, hard drive, Google Drive, restore (`backup`, `/api/backup`, `/api/export`, `/api/import`) |
-| **12.0 Notify GSO-OIC** | Backend diff engine, read/unread, SSE live feed (`notifications.py`) |
+| **12.0 Role-Based Notifications** | Backend recipient routing by role and office, read/unread, reminders, SSE live feed (`notifications.py`) |
 | **13.0 Sign-up & Approval** | Public registration for Inspectorate/GSO Office/Municipal Office Head, OIC approval (`/api/auth/register`) |
 | **14.0 Offline Sync** | IndexedDB scan queue, automatic retry, duplicate prevention (`scan-sync.js`, `/api/scans`, `sync_events`) |
 

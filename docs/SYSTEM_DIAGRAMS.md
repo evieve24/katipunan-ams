@@ -37,13 +37,13 @@ flowchart LR
   SYS -->|notifications, reports, asset status| OIC
 
   INS -->|inspections, scans, inventory| SYS
-  SYS -->|asset and scan results| INS
+  SYS -->|asset/scan results and role alerts| INS
 
   GSO -->|assets, repairs, borrowals, transfers| SYS
-  SYS -->|asset records and reports| GSO
+  SYS -->|asset records, reports and role alerts| GSO
 
   HEAD -->|report requests| SYS
-  SYS -->|office reports and activity| HEAD
+  SYS -->|office reports, activity and alerts| HEAD
 
   NEW -->|sign-up request| SYS
   SYS -->|pending-account status| NEW
@@ -79,7 +79,7 @@ flowchart LR
     P9["9.0 Generate Reports"]
     P10["10.0 Activity Logs and Audit"]
     P11["11.0 Backup and Restore"]
-    P12["12.0 Notify GSO-OIC"]
+    P12["12.0 Role-Based Notifications"]
     P13["13.0 Sign-up and Approval"]
     P14["14.0 Offline Sync"]
   end
@@ -106,7 +106,11 @@ flowchart LR
   OIC -->|borrow oversight| P3
   OIC -->|transfers| P5
   OIC -->|backups| P11
-  OIC -->|notification feed| P12
+
+  P2 -.-> P12
+  P3 -.-> P12
+  P8 -.-> P12
+  P41 -.-> P12
 
   INS -->|inspect assets| P2
   INS -->|inventory counts| P4
@@ -146,6 +150,9 @@ flowchart LR
   P13 -->|pending account| D1
   P13 -->|approval| P1
   D13 -->|live notifications| OIC
+  D13 -->|role alerts| GSO
+  D13 -->|role alerts| INS
+  D13 -->|office alerts| HEAD
   P9 -->|printed or CSV report| HEAD
   P10 -->|activity and audit view| OIC
   P10 -->|activity view| INS
@@ -395,7 +402,7 @@ the only exception: it is the backend JSON snapshot, not a DFD data store.
 | D10 Activity Logs Data | `D10_AUDIT` | `audit` | Security audit trail |
 | D11 Backup Data | `D11_BACKUP` | `backup` | Backup records |
 | D12 Scan and Location Data | `D12_ASSET_SCAN` | `asset_scan` | QR scan and location history |
-| D13 Notification Data | `D13_NOTIFICATION` | `notifications` | GSO-OIC notification feed |
+| D13 Notification Data | `D13_NOTIFICATION` | `notifications` | Role-targeted notification feed |
 | D14 Sync Data | `D14_SYNC_EVENT` | `sync_events` | Device synchronization records |
 | — | `APP_STATE` | `app_state` | JSON state snapshot, not a DFD store |
 

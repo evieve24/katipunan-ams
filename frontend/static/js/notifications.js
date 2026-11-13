@@ -74,7 +74,7 @@
   }
 
   async function load() {
-    if (!isOic() || !authToken()) return;
+    if (!authToken()) return;
     try {
       const data = await api('/api/notifications?limit=100');
       items = Array.isArray(data.items) ? data.items : [];
@@ -113,6 +113,7 @@
     if (legacy) legacy.style.display = 'none';
     if (bell) {
       bell.style.display = 'flex';
+      bell.title = 'Notifications';
       bell.classList.toggle('has-unread', unread > 0);
     }
     if (badge) {
@@ -232,9 +233,12 @@
         return (
           '<div class="notif-item ' +
           (item.read ? '' : 'unread') +
-          '" onclick="openNotificationDetail(' +
+          '" onclick="activateNotification(' +
           Number(item.id) +
           ')">' +
+          '<button type="button" class="notif-item-info" title="View details" onclick="event.stopPropagation();openNotificationDetail(' +
+          Number(item.id) +
+          ')">ℹ</button>' +
           (item.read ? '' : '<span class="notif-unread-dot"></span>') +
           '<div class="notif-item-title">' +
           esc(itemSummary(item)) +
@@ -262,6 +266,83 @@
     return items.find(function (item) {
       return Number(item.id) === Number(id);
     });
+  }
+
+  function findAssetContext(assetId) {
+    const id = String(assetId || '').trim();
+    if (!id || typeof staffData === 'undefined') return null;
+    for (const dept of Object.keys(staffData)) {
+      const list = staffData[dept];
+      if (!Array.isArray(list)) continue;
+      for (const staff of list) {
+        if (
+          (staff.equipment || []).some(function (eq) {
+            return String(eq.id) === id;
+          })
+        ) {
+          return { dept: dept, staff: staff };
+        }
+      }
+    }
+    return null;
+  }
+
+  function navigateToNotification(item) {
+    const action = String(item.action || '');
+    if (
+      action === 'account_registration' ||
+      action === 'account_approved' ||
+      action === 'account_updated'
+    ) {
+      openDetail(item.id);
+      return;
+    }
+    if (action === 'report_generated') {
+      if (typeof showView === 'function') showView('reports');
+      else openDetail(item.id);
+      return;
+    }
+    if (action === 'backup_recorded' || action === 'backup_imported') {
+      if (typeof showSettings === 'function') showSettings();
+      else openDetail(item.id);
+      return;
+    }
+    if (action === 'sync_received' || action === 'sync_error') {
+      if (typeof showSyncCenter === 'function') showSyncCenter();
+      else openDetail(item.id);
+      return;
+    }
+    if (action === 'inventory_loaded') {
+      if (typeof showView === 'function') showView('equipment');
+      else openDetail(item.id);
+      return;
+    }
+    if (item.asset_id) {
+      const context = findAssetContext(item.asset_id);
+      if (context && typeof showStaff === 'function') {
+        showStaff(context.dept);
+        setTimeout(function () {
+          if (typeof showProfile === 'function') showProfile(context.staff);
+        }, 120);
+        return;
+      }
+      if (typeof handleSearch === 'function') {
+        const input = el('searchInput');
+        if (input) input.value = item.asset_id;
+        handleSearch(item.asset_id);
+        return;
+      }
+    }
+    openDetail(item.id);
+  }
+
+  function activateNotification(id) {
+    const item = findItem(id);
+    if (!item) return;
+    if (!item.read) markRead(item.id);
+    const panel = el('notificationPanel');
+    if (panel) panel.classList.remove('open');
+    navigateToNotification(item);
   }
 
   function formatValue(value) {
@@ -310,7 +391,7 @@
       }
     }
     const approval =
-      item.action === 'account_registration' && signupUsername
+      isOic() && item.action === 'account_registration' && signupUsername
         ? '<div class="notif-approval">' +
           '<button class="notif-approve-btn" onclick="approveSignupAccount(\'' +
           esc(signupUsername) +
@@ -426,7 +507,7 @@
   }
 
   function togglePanel(show) {
-    if (!isOic()) return;
+    if (!authToken()) return;
     const panel = el('notificationPanel');
     if (!panel) return;
     const open =
@@ -441,7 +522,7 @@
   }
 
   function connectStream() {
-    if (!isOic() || !authToken()) return;
+    if (!authToken()) return;
     if (stream) return;
     if (typeof EventSource === 'undefined') {
       startPolling();
@@ -509,11 +590,21 @@
   }
 
   function init() {
-    if (!isOic() || !authToken()) return;
+    if (!authToken()) return;
     const bell = el('notifBellBtn');
     const card = el('oicNotificationsCard');
+    const manage = el('notifManageUsersBtn');
+    const title = el('notifPanelTitle');
+    const subtitle = el('notifPanelSummary');
     if (bell) bell.style.display = 'flex';
     if (card) card.style.display = 'block';
+    if (manage) manage.style.display = isOic() ? 'inline-block' : 'none';
+    if (title) title.textContent = 'Notifications';
+    if (subtitle) {
+      subtitle.textContent = isOic()
+        ? 'Activity across all offices'
+        : 'Updates relevant to your role';
+    }
     load();
     connectStream();
   }
@@ -541,6 +632,7 @@
   window.setNotificationFilter = setFilter;
   window.openNotificationDetail = openDetail;
   window.closeNotificationDetail = closeDetail;
+  window.activateNotification = activateNotification;
   window.markAllNotificationsRead = markAll;
   window.approveSignupAccount = approveSignupAccount;
   window.loadNotifications = load;

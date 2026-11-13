@@ -98,11 +98,11 @@ Limit is capped at 100.
 
 The scanner still calls the existing `logAction()` and `queueSync('qr_scan', ...)`
 flow. That writes `mets_log`, which `/api/state` projects into
-`activity_log`, and the backend diff engine emits a GSO-OIC notification for
-the asset's changed last-scan fields. Scan-only diffs are classified as
-**`asset_scanned` / "Asset scanned"**. The OIC is the actor-excluded recipient;
-the actor's own scans do not notify themselves. Officer/Inspector/GSO scans
-notify the OIC as before.
+`activity_log`, and the backend diff engine emits role-targeted notifications
+for the asset's changed last-scan fields. Scan-only diffs are classified as
+**`asset_scanned` / "Asset scanned"**. The OIC, GSO Staff, Inspectorate, and
+the asset's Office Head receive it when their role/office matches; the actor's
+own scans do not notify themselves.
 
 ## 4. Frontend
 
@@ -209,8 +209,8 @@ notify the OIC as before.
    accuracy, distance check, map iframe, history, and sync status all
    rendered; no console errors.
 6. **Notifications**: an Inspector state update produced an
-   `asset_scanned` / "Asset scanned" notification for the GSO-OIC with actor,
-   role, asset, previous/updated scan fields.
+   `asset_scanned` / "Asset scanned" notification for the authorized roles with
+   actor, role, asset, previous/updated scan fields.
 7. **Activity log**: the scan entry appeared in `activity_log` with `user_id`,
    action text (asset + location), and timestamp.
 8. **Clean state**: test staff/assets/scans/notifications removed; personnel

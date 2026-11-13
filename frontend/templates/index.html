@@ -472,7 +472,7 @@
         <input type="text" id="searchInput" placeholder="Search staff, equipment..." oninput="handleSearch(this.value)" onkeydown="if(event.key==='Escape')clearSearch()">
         <span id="searchClearBtn" style="cursor:pointer;color:var(--text-light);display:none;font-size:0.78rem" onclick="clearSearch()">✕</span>
       </div>
-      <button class="notif-bell" id="notifBellBtn" onclick="toggleNotificationPanel()" title="GSO-OIC notifications" style="display:none;">
+      <button class="notif-bell" id="notifBellBtn" onclick="toggleNotificationPanel()" title="Notifications" style="display:none;">
         <i class="ti ti-bell"></i>
         <span class="notif-bell-badge" id="notifBellBadge" style="display:none;">0</span>
       </button>
@@ -1531,15 +1531,15 @@
 <div id="ms_mobileToast" style="position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#0d1b3e;color:#c9a84c;padding:9px 18px;border-radius:20px;font-size:11px;font-weight:600;z-index:9999;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.5);opacity:0;transition:opacity .3s;pointer-events:none;border:1px solid rgba(201,168,76,0.2);" class=""></div>
 
 <!-- QR CODE MODAL -->
-<!-- GSO-OIC NOTIFICATIONS PANEL -->
-<div id="notificationPanel" class="notif-panel" role="dialog" aria-label="GSO-OIC notifications">
+<!-- NOTIFICATIONS PANEL -->
+<div id="notificationPanel" class="notif-panel" role="dialog" aria-label="Notifications">
   <div class="notif-panel-head">
     <div>
-      <div class="notif-panel-title">GSO-OIC Notifications</div>
-      <div class="notif-panel-sub" id="notifPanelSummary">Activity from authorized users</div>
+      <div class="notif-panel-title" id="notifPanelTitle">Notifications</div>
+      <div class="notif-panel-sub" id="notifPanelSummary">Updates relevant to your role</div>
     </div>
     <div style="display:flex;align-items:center;gap:6px;">
-      <button class="notif-link-btn" onclick="window.open('/admin.html','_blank')">Manage users</button>
+      <button class="notif-link-btn" id="notifManageUsersBtn" onclick="window.open('/admin.html','_blank')">Manage users</button>
       <button class="notif-link-btn" onclick="markAllNotificationsRead()">Mark all read</button>
       <button class="notif-close-btn" onclick="toggleNotificationPanel(false)" aria-label="Close notifications">✕</button>
     </div>

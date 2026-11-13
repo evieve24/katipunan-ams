@@ -1747,7 +1747,14 @@ body:not(.role-oic) .action-btn.delete,body:not(.role-oic) .staff-card .action-b
 }
 .notif-item:hover{background:var(--bg);}
 .notif-item.unread{background:rgba(201,168,76,.08);border-color:rgba(201,168,76,.18);}
-.notif-item-title{font-size:0.76rem;font-weight:700;color:var(--text-dark);line-height:1.35;padding-right:12px;}
+.notif-item-info{
+  position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;
+  border:none;background:transparent;color:var(--text-light);cursor:pointer;
+  font-family:inherit;font-size:0.78rem;line-height:1;display:flex;
+  align-items:center;justify-content:center;
+}
+.notif-item-info:hover{background:var(--border);color:var(--text-dark);}
+.notif-item-title{font-size:0.76rem;font-weight:700;color:var(--text-dark);line-height:1.35;padding-right:24px;}
 .notif-item-meta{font-size:0.67rem;color:var(--text-light);margin-top:3px;}
 .notif-item-details{font-size:0.68rem;color:var(--text-mid);margin-top:3px;line-height:1.35;}
 .notif-item-time{font-size:0.63rem;color:var(--text-light);margin-top:4px;}

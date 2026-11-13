@@ -8,10 +8,11 @@ from __future__ import annotations
 
 import json
 import queue
+import re
 import threading
 from typing import TYPE_CHECKING
 
-from config import ROLES
+from config import OFFICE_LABELS, ROLES
 from state import state_json, state_records
 from utils import iso_now
 
@@ -26,6 +27,102 @@ NOTIFY_STATE_KEYS = {
     "mets_borrows",
     "mets_transfers",
 }
+
+# Event families. OIC receives every event. Other roles receive only the
+# families that match their responsibilities.
+ASSET_EVENT_TYPES = {
+    "asset_added",
+    "asset_removed",
+    "asset_updated",
+    "asset_condition_changed",
+    "inventory_updated",
+    "asset_scanned",
+    "repair_requested",
+    "repair_status_updated",
+    "repair_updated",
+    "borrow_issued",
+    "borrow_returned",
+    "borrow_approved",
+    "borrow_rejected",
+    "borrow_status_updated",
+    "borrow_updated",
+    "borrow_overdue",
+    "asset_transferred",
+    "transfer_updated",
+}
+GSO_EVENT_TYPES = ASSET_EVENT_TYPES | {"inventory_loaded"}
+INSPECTOR_EVENT_TYPES = {
+    "asset_condition_changed",
+    "asset_scanned",
+    "inventory_updated",
+    "repair_requested",
+    "repair_status_updated",
+    "repair_updated",
+    "asset_transferred",
+    "transfer_updated",
+}
+OFFICE_HEAD_EVENT_TYPES = ASSET_EVENT_TYPES
+
+DEPT_OFFICE_EXACT = {
+    "exec_asst": "mayors",
+    "public_rel": "mayors",
+    "protocol": "mayors",
+    "hr": "municipal",
+    "records": "municipal",
+    "procurement": "municipal",
+    "it": "municipal",
+    "liaison": "municipal",
+}
+DEPT_OFFICE_PREFIXES = (
+    ("budget_", "budget"),
+    ("mpc_", "mpc"),
+    ("pdo_", "mpc"),
+    ("acct_", "accounting"),
+    ("treas_", "treasury"),
+    ("eng_", "engineering"),
+    ("assess_", "assessor"),
+    ("creg_", "civilreg"),
+    ("rhu_", "rhu"),
+    ("bfp_", "bfp"),
+    ("pnp_", "pnp"),
+    ("motor_", "motorpool"),
+    ("ldrrmo_", "ldrrmo"),
+    ("dswd_", "dswd"),
+    ("mswd_", "mswd"),
+    ("sc_", "seniors"),
+    ("owwa_", "owwa"),
+    ("water_", "water"),
+    ("mkt_", "market"),
+    ("gso_", "gso"),
+)
+OFFICE_LABEL_ALIASES = {
+    "GSO": "gso",
+    "General Services Office": "gso",
+    "MPDO": "mpc",
+    "Municipal Planning & Dev. Office": "mpc",
+    "RHU": "rhu",
+    "BFP Office": "bfp",
+    "Admin Office": "municipal",
+    "HR": "municipal",
+}
+LABEL_TO_OFFICE = {
+    label: key for key, label in OFFICE_LABELS.items()
+}
+LABEL_TO_OFFICE.update(OFFICE_LABEL_ALIASES)
+
+
+def dept_office_key(dept) -> str:
+    """Map a personnel department id to its parent office key."""
+    value = str(dept or "").strip()
+    if not value:
+        return ""
+    if value in DEPT_OFFICE_EXACT:
+        return DEPT_OFFICE_EXACT[value]
+    for prefix, key in DEPT_OFFICE_PREFIXES:
+        if value.startswith(prefix):
+            return key
+    return ""
+
 
 ASSET_FIELD_LABELS = {
     "name": "Equipment",
@@ -164,6 +261,7 @@ def _event(
     details: str = "",
     changes: list[dict] | None = None,
     source: str = "state",
+    offices: list[str] | None = None,
 ) -> dict:
     return {
         "action_type": action_type,
@@ -173,6 +271,7 @@ def _event(
         "details": details,
         "changes": changes or [],
         "source": source,
+        "offices": [office for office in (offices or []) if office],
     }
 
 
@@ -190,6 +289,7 @@ def asset_snapshot(eq: dict, person: dict | None = None, dept: str = "") -> dict
         "remarks": _text(eq.get("remarks")),
         "owner": _text(person.get("name") or eq.get("ownerName")),
         "dept": _text(dept),
+        "office": dept_office_key(dept),
         "lastScanDate": _text(eq.get("lastScanDate")),
         "lastScannedLocation": _text(eq.get("lastScannedLocation")),
     }
@@ -272,6 +372,7 @@ def diff_asset_snapshot(
         _summary(changes),
         changes,
         source,
+        offices=[after.get("office")],
     )
 
 
@@ -310,6 +411,7 @@ def _asset_events(old_state: dict[str, str], new_state: dict[str, str]) -> list[
                 "New asset registered",
                 changes,
                 "state",
+                offices=[asset.get("office")],
             )
         )
 
@@ -331,6 +433,7 @@ def _asset_events(old_state: dict[str, str], new_state: dict[str, str]) -> list[
                     }
                 ],
                 "state",
+                offices=[asset.get("office")],
             )
         )
 
@@ -404,6 +507,7 @@ def _repair_events(
                 details,
                 changes,
                 "state",
+                offices=[asset.get("office")],
             )
         )
 
@@ -429,6 +533,7 @@ def _repair_events(
                 _summary(changes),
                 changes,
                 "state",
+                offices=[asset.get("office")],
             )
         )
 
@@ -475,6 +580,7 @@ def _borrow_events(
                 details,
                 changes,
                 "state",
+                offices=[asset.get("office")],
             )
         )
 
@@ -510,6 +616,7 @@ def _borrow_events(
                 _summary(changes),
                 changes,
                 "state",
+                offices=[asset.get("office")],
             )
         )
 
@@ -552,6 +659,11 @@ def _transfer_events(
                 details,
                 changes,
                 "state",
+                offices=[
+                    asset.get("office"),
+                    LABEL_TO_OFFICE.get(_text(record.get("fromOffice"))),
+                    LABEL_TO_OFFICE.get(_text(record.get("toOffice"))),
+                ],
             )
         )
 
@@ -572,6 +684,11 @@ def _transfer_events(
                 _summary(changes),
                 changes,
                 "state",
+                offices=[
+                    asset.get("office"),
+                    LABEL_TO_OFFICE.get(_text(after.get("fromOffice"))),
+                    LABEL_TO_OFFICE.get(_text(after.get("toOffice"))),
+                ],
             )
         )
 
@@ -640,75 +757,187 @@ def unread_count(con: Database, user_id: int) -> int:
     return int(row["n"] or 0)
 
 
-def insert_notifications(con: Database, events: list[dict], actor) -> list[dict]:
-    """Insert one row per active GSO-OIC, excluding the actor themselves."""
-    if not events:
-        return []
+def _user_receives_event(user: dict, event_type: str, offices: set[str]) -> bool:
+    role = _text(user.get("role"))
+    if role == "oic":
+        return True
+    if role == "gsostaff":
+        return event_type in GSO_EVENT_TYPES
+    if role == "inspector":
+        return event_type in INSPECTOR_EVENT_TYPES
+    if role == "officehead":
+        return (
+            event_type in OFFICE_HEAD_EVENT_TYPES
+            and bool(offices & {_text(user.get("office"))})
+        )
+    return False
+
+
+def _recipients_for_event(event: dict, users: list[dict], actor_id) -> list[int]:
+    event_type = _text(event.get("action_type")) or "activity"
+    offices = {str(item) for item in (event.get("offices") or []) if item}
+    return [
+        row["id"]
+        for row in users
+        if row["id"] != actor_id and _user_receives_event(row, event_type, offices)
+    ]
+
+
+def _insert_for_recipient(
+    con: Database, event: dict, actor, recipient_id: int, now: str
+) -> dict:
     actor_id = (actor or {}).get("id")
     actor_name = (
         (actor or {}).get("name") or (actor or {}).get("username") or "Unknown user"
     )
     actor_role = (actor or {}).get("role") or ""
-    recipients = con.execute(
-        "SELECT id FROM users WHERE role = 'oic' AND active = 1"
+    changes_json = json.dumps(event.get("changes") or [], ensure_ascii=False)
+    cur = con.execute(
+        "INSERT INTO notifications (recipient_user_id, actor_user_id,"
+        " actor_name, actor_role, action_type, action_label, asset_id,"
+        " asset_name, details, changes_json, source, created_at)"
+        " VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
+        (
+            recipient_id,
+            actor_id,
+            actor_name,
+            actor_role,
+            event.get("action_type") or "activity",
+            event.get("action_label") or "Activity",
+            event.get("asset_id"),
+            event.get("asset_name"),
+            event.get("details"),
+            changes_json,
+            event.get("source") or "state",
+            now,
+        ),
+    )
+    return {
+        "recipient_id": recipient_id,
+        "item": {
+            "id": cur.lastrowid,
+            "actor_id": actor_id,
+            "actor_name": actor_name,
+            "actor_role": actor_role,
+            "actor_role_label": ROLES.get(actor_role, actor_role),
+            "action": event.get("action_type"),
+            "label": event.get("action_label"),
+            "asset_id": event.get("asset_id"),
+            "asset_name": event.get("asset_name"),
+            "details": event.get("details"),
+            "changes": event.get("changes") or [],
+            "source": event.get("source") or "state",
+            "created_at": now,
+            "read": False,
+            "read_at": None,
+        },
+    }
+
+
+def insert_notifications(con: Database, events: list[dict], actor) -> list[dict]:
+    """Insert one row per authorized recipient, excluding the actor."""
+    if not events:
+        return []
+    actor_id = (actor or {}).get("id")
+    users = con.execute(
+        "SELECT id, role, office FROM users WHERE active = 1"
     ).fetchall()
-    recipient_ids = [row["id"] for row in recipients if row["id"] != actor_id]
-    if not recipient_ids:
+    if not users:
         return []
 
     now = iso_now()
     inserted: list[dict] = []
     for event in events:
-        changes_json = json.dumps(event.get("changes") or [], ensure_ascii=False)
-        for recipient_id in recipient_ids:
-            cur = con.execute(
-                "INSERT INTO notifications (recipient_user_id, actor_user_id,"
-                " actor_name, actor_role, action_type, action_label, asset_id,"
-                " asset_name, details, changes_json, source, created_at)"
-                " VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
-                (
-                    recipient_id,
-                    actor_id,
-                    actor_name,
-                    actor_role,
-                    event.get("action_type") or "activity",
-                    event.get("action_label") or "Activity",
-                    event.get("asset_id"),
-                    event.get("asset_name"),
-                    event.get("details"),
-                    changes_json,
-                    event.get("source") or "state",
-                    now,
-                ),
-            )
+        for recipient_id in _recipients_for_event(event, users, actor_id):
             inserted.append(
-                {
-                    "recipient_id": recipient_id,
-                    "item": {
-                        "id": cur.lastrowid,
-                        "actor_id": actor_id,
-                        "actor_name": actor_name,
-                        "actor_role": actor_role,
-                        "actor_role_label": ROLES.get(actor_role, actor_role),
-                        "action": event.get("action_type"),
-                        "label": event.get("action_label"),
-                        "asset_id": event.get("asset_id"),
-                        "asset_name": event.get("asset_name"),
-                        "details": event.get("details"),
-                        "changes": event.get("changes") or [],
-                        "source": event.get("source") or "state",
-                        "created_at": now,
-                        "read": False,
-                        "read_at": None,
-                    },
-                }
+                _insert_for_recipient(con, event, actor, recipient_id, now)
             )
 
+    recipient_ids = {entry["recipient_id"] for entry in inserted}
     unread_by_recipient = {
-        recipient_id: unread_count(con, recipient_id) for recipient_id in recipient_ids
+        recipient_id: unread_count(con, recipient_id)
+        for recipient_id in recipient_ids
     }
     for entry in inserted:
         entry["unread"] = unread_by_recipient[entry["recipient_id"]]
+    return inserted
+
+
+def insert_user_notification(
+    con: Database, recipient_id: int, event: dict, actor
+) -> list[dict]:
+    """Insert a notification directly for one user, e.g. account approval."""
+    actor_id = (actor or {}).get("id")
+    if not recipient_id or recipient_id == actor_id:
+        return []
+    now = iso_now()
+    entry = _insert_for_recipient(con, event, actor, recipient_id, now)
+    entry["unread"] = unread_count(con, recipient_id)
+    return [entry]
+
+
+def generate_overdue_borrow_reminders(con: Database, user: dict) -> list[dict]:
+    """Create one daily reminder per overdue borrow relevant to this user."""
+    if _text(user.get("role")) not in ("oic", "gsostaff", "officehead"):
+        return []
+    state = {
+        row["key"]: row["value"]
+        for row in con.execute("SELECT `key`, `value` FROM app_state")
+    }
+    borrows = state_records(state, "mets_borrows")
+    assets = asset_map(state)
+    today = iso_now()[:10]
+    inserted: list[dict] = []
+
+    for asset_id, records in (borrows.items() if isinstance(borrows, dict) else []):
+        if not isinstance(records, list):
+            continue
+        asset = assets.get(str(asset_id), {})
+        offices = {_text(asset.get("office"))}
+        for record in records:
+            if not isinstance(record, dict):
+                continue
+            expected = _text(record.get("expectedReturn"))[:10]
+            if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", expected):
+                continue
+            if expected >= today:
+                continue
+            status = _text(record.get("status")).lower()
+            if status.startswith(("return", "reject", "cancel", "denied", "closed")):
+                continue
+            if not _user_receives_event(user, "borrow_overdue", offices):
+                continue
+            existing = con.execute(
+                "SELECT 1 FROM notifications WHERE recipient_user_id = %s"
+                " AND action_type = 'borrow_overdue' AND asset_id = %s"
+                " AND created_at LIKE %s LIMIT 1",
+                (user["id"], str(asset_id), today + "%"),
+            ).fetchone()
+            if existing:
+                continue
+            details = (
+                f"Expected return: {expected}"
+                f" · Borrower: {_text(record.get('borrower')) or '—'}"
+                f" · Status: {_text(record.get('status')) or 'Borrowed'}"
+            )
+            event = _event(
+                "borrow_overdue",
+                "Borrow overdue",
+                str(asset_id),
+                _text(asset.get("name")) or str(asset_id),
+                details,
+                [],
+                "reminder",
+                offices=list(offices),
+            )
+            inserted.extend(
+                insert_user_notification(
+                    con,
+                    user["id"],
+                    event,
+                    {"id": None, "name": "System reminder", "role": "system"},
+                )
+            )
     return inserted
 
 

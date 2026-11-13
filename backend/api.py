@@ -41,8 +41,10 @@ from notifications import (
     asset_snapshot,
     diff_asset_snapshot,
     diff_state,
+    generate_overdue_borrow_reminders,
     hub,
     insert_notifications,
+    insert_user_notification,
     list_notifications,
     mark_all_read,
     mark_read,
@@ -1045,8 +1047,6 @@ class Handler(BaseHTTPRequestHandler):
     # ----- notifications ---------------------------------------------------
 
     def _api_notifications_list(self, user, query) -> None:
-        if not self._require_admin(user):
-            return
         try:
             limit = max(1, min(int((query.get("limit") or ["100"])[0]), 200))
         except ValueError:
@@ -1058,6 +1058,10 @@ class Handler(BaseHTTPRequestHandler):
         )
         con = connect()
         try:
+            reminders = generate_overdue_borrow_reminders(con, user)
+            if reminders:
+                con.commit()
+                publish_notifications(reminders)
             data = list_notifications(con, user["id"], limit, unread_only)
         finally:
             con.close()
@@ -1072,8 +1076,6 @@ class Handler(BaseHTTPRequestHandler):
         )
 
     def _api_notification_read(self, user, path: str) -> None:
-        if not self._require_admin(user):
-            return
         parts = path.split("/")
         try:
             notification_id = int(parts[3])
@@ -1093,8 +1095,6 @@ class Handler(BaseHTTPRequestHandler):
         self._json(200, {"ok": True, "unread": unread})
 
     def _api_notifications_read_all(self, user) -> None:
-        if not self._require_admin(user):
-            return
         con = connect()
         try:
             unread = mark_all_read(con, user["id"])
@@ -1105,8 +1105,6 @@ class Handler(BaseHTTPRequestHandler):
         self._json(200, {"ok": True, "unread": unread})
 
     def _api_notifications_stream(self, user) -> None:
-        if not self._require_admin(user):
-            return
         con = connect()
         try:
             unread = unread_count(con, user["id"])
@@ -1509,6 +1507,7 @@ class Handler(BaseHTTPRequestHandler):
         if body is None:
             return
         con = connect()
+        notify_entries: list = []
         try:
             row = con.execute(
                 "SELECT * FROM users WHERE id = %s", (target_id,)
@@ -1516,6 +1515,7 @@ class Handler(BaseHTTPRequestHandler):
             if not row:
                 self._error(404, "User not found")
                 return
+            activated = "active" in body and bool(body["active"]) and not row["active"]
             fields = []
             params: list = []
             if "name" in body:
@@ -1571,7 +1571,27 @@ class Handler(BaseHTTPRequestHandler):
                 f"id={target_id}; fields={','.join(body.keys())}",
                 self._client_ip(),
             )
+            if activated:
+                notify_entries = insert_user_notification(
+                    con,
+                    target_id,
+                    {
+                        "action_type": "account_approved",
+                        "action_label": "Account approved",
+                        "asset_id": None,
+                        "asset_name": None,
+                        "details": (
+                            f"Your account was approved by {user['name']}"
+                            f" ({ROLES.get(user['role'], user['role'])})."
+                            " You can now sign in."
+                        ),
+                        "changes": [],
+                        "source": "auth",
+                    },
+                    user,
+                )
             con.commit()
+            publish_notifications(notify_entries)
             updated = con.execute(
                 "SELECT * FROM users WHERE id = %s", (target_id,)
             ).fetchone()
@@ -1690,6 +1710,7 @@ class Handler(BaseHTTPRequestHandler):
             return
         now = iso_now()
         con = connect()
+        notify_entries: list = []
         try:
             cur = con.execute(
                 "INSERT IGNORE INTO report (user_id, report_type, report_period, generated_at, file_path)"
@@ -1706,6 +1727,21 @@ class Handler(BaseHTTPRequestHandler):
                     f"{report_type}; period={period}",
                     self._client_ip(),
                 )
+                notify_entries = insert_notifications(
+                    con,
+                    [
+                        {
+                            "action_type": "report_generated",
+                            "action_label": "Report generated",
+                            "asset_id": None,
+                            "asset_name": None,
+                            "details": f"{report_type} · Period: {period or 'all'}",
+                            "changes": [],
+                            "source": "report",
+                        }
+                    ],
+                    user,
+                )
             else:
                 existing = con.execute(
                     "SELECT report_id FROM report WHERE report_type = %s AND generated_at = %s",
@@ -1713,6 +1749,7 @@ class Handler(BaseHTTPRequestHandler):
                 ).fetchone()
                 report_id = existing["report_id"] if existing else None
             con.commit()
+            publish_notifications(notify_entries)
             self._json(
                 201,
                 {
@@ -1746,6 +1783,7 @@ class Handler(BaseHTTPRequestHandler):
             return
         now = iso_now()
         con = connect()
+        notify_entries: list = []
         try:
             cur = con.execute(
                 "INSERT IGNORE INTO backup (user_id, backup_date, file_name, storage_type, status)"
@@ -1760,7 +1798,23 @@ class Handler(BaseHTTPRequestHandler):
                     f"{file_name} ({storage_type})",
                     self._client_ip(),
                 )
+                notify_entries = insert_notifications(
+                    con,
+                    [
+                        {
+                            "action_type": "backup_recorded",
+                            "action_label": "Backup completed",
+                            "asset_id": None,
+                            "asset_name": None,
+                            "details": f"{file_name} · {storage_type} · {status}",
+                            "changes": [],
+                            "source": "backup",
+                        }
+                    ],
+                    user,
+                )
             con.commit()
+            publish_notifications(notify_entries)
             self._json(
                 201,
                 {
