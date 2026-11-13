@@ -18,6 +18,17 @@ erDiagram
     ASSET ||--o{ BORROW : "is borrowed in"
     ASSET ||--o{ INVENTORY : "is counted in"
     ASSET ||--o{ ASSET_TRANSFER : "is transferred via"
+    ASSET ||--o{ ASSET_SCAN : "is scanned in"
+    ASSET |o--o{ NOTIFICATION : "is referenced in"
+
+    USER ||--o{ SESSION : opens
+    USER |o--o{ ASSET_SCAN : performs
+    USER |o--o{ APP_STATE : updates
+    USER |o--o{ AUDIT : "is recorded in"
+    USER |o--o{ SYNC_EVENT : performs
+    USER ||--o{ NOTIFICATION : receives
+    USER |o--o{ NOTIFICATION : acts
+    USER |o--o{ NOTIFICATION : reads
 
     USER {
         int user_id PK
@@ -92,6 +103,67 @@ erDiagram
         string generated_at
         string file_path
     }
+    SESSION {
+        string token PK
+        int user_id FK
+        string created_at
+        string expires_at
+        string ip
+        string user_agent
+    }
+    ASSET_SCAN {
+        string scan_id PK
+        string asset_id FK
+        int user_id FK
+        string actor_role
+        decimal latitude
+        decimal longitude
+        int accuracy
+        string scanned_at
+        string activity
+        string source
+        string device
+        string ip
+        string created_at
+    }
+    APP_STATE {
+        string key PK
+        longtext value
+        string updated_at
+        int updated_by FK
+    }
+    AUDIT {
+        int id PK
+        string at
+        int user_id FK
+        string username
+        string action
+        string detail
+        string ip
+    }
+    SYNC_EVENT {
+        int id PK
+        string at
+        string device
+        string action
+        string asset_id
+        longtext payload
+        int user_id FK
+    }
+    NOTIFICATION {
+        int id PK
+        int recipient_user_id FK
+        int actor_user_id FK
+        string actor_name
+        string actor_role
+        string action_type
+        string action_label
+        string asset_id FK
+        string asset_name
+        string created_at
+        string read_at
+        int read_by FK
+    }
     BORROW {
         int borrow_id PK
         string asset_id FK
@@ -152,7 +224,7 @@ LIMIT 20;
 | `INVENTORY` | `inventory` | Current location and capture date per asset. |
 | `ASSET_TRANSFER` | `asset_transfer` | Transfer history between offices. |
 
-## Operational tables (outside the original ERD)
+## Operational tables
 
 | Table | Purpose |
 | --- | --- |
@@ -161,6 +233,7 @@ LIMIT 20;
 | `sync_events` | Device sync records |
 | `notifications` | GSO-OIC activity feed generated automatically by the backend |
 | `asset_scan` | One row per QR scan: client idempotency key (`scan_id`), asset, user, role snapshot, latitude/longitude/accuracy, scan time, activity, source, device, and IP. This is the authoritative scan/location history. It never modifies the asset's registered location or registered coordinates. |
+| `app_state` | Backend JSON snapshot for state hydration and offline synchronization. It is not a DFD data store. |
 
 ### Why `asset_scan` exists
 
@@ -178,6 +251,10 @@ The implemented DFD, including data stores D1–D14 and DFD-named SQL views, is 
 - `assets.user_id` → `users.id`, `ON DELETE SET NULL` (history survives when an account is removed).
 - All asset child tables reference `assets.asset_id` with `ON DELETE CASCADE`.
 - `backup.user_id`, `activity_log.user_id`, and `report.user_id` reference `users.id` with `ON DELETE SET NULL`.
+- `sessions.user_id` references `users.id` with `ON DELETE CASCADE`.
+- `asset_scan.user_id` references `users.id` with `ON DELETE SET NULL`.
+- `app_state.updated_by`, `audit.user_id`, and `sync_events.user_id` reference `users.id` with `ON DELETE SET NULL`.
+- `notifications.recipient_user_id` references `users.id` with `ON DELETE CASCADE`; `actor_user_id` and `read_by` use `ON DELETE SET NULL`; `asset_id` references `assets.asset_id` with `ON DELETE SET NULL`.
 
 ## Additional columns (application compatibility)
 

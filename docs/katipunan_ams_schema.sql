@@ -29,7 +29,9 @@ CREATE TABLE `app_state` (
   `value` longtext NOT NULL,
   `updated_at` varchar(40) NOT NULL,
   `updated_by` int(11) DEFAULT NULL,
-  PRIMARY KEY (`key`)
+  PRIMARY KEY (`key`),
+  KEY `idx_app_state_updated_by` (`updated_by`),
+  CONSTRAINT `fk_app_state_updated_by` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -129,7 +131,9 @@ CREATE TABLE `audit` (
   `detail` text DEFAULT NULL,
   `ip` varchar(64) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `idx_audit_at` (`at`)
+  KEY `idx_audit_at` (`at`),
+  KEY `idx_audit_user` (`user_id`),
+  CONSTRAINT `fk_audit_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=674 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -214,7 +218,14 @@ CREATE TABLE `notifications` (
   `read_by` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_notifications_recipient` (`recipient_user_id`,`read_at`),
-  KEY `idx_notifications_created` (`created_at`)
+  KEY `idx_notifications_created` (`created_at`),
+  KEY `idx_notifications_actor` (`actor_user_id`),
+  KEY `idx_notifications_read_by` (`read_by`),
+  KEY `idx_notifications_asset` (`asset_id`),
+  CONSTRAINT `fk_notifications_recipient` FOREIGN KEY (`recipient_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_notifications_actor` FOREIGN KEY (`actor_user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_notifications_read_by` FOREIGN KEY (`read_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_notifications_asset` FOREIGN KEY (`asset_id`) REFERENCES `assets` (`asset_id`) ON DELETE SET NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -274,7 +285,9 @@ CREATE TABLE `sync_events` (
   `payload` longtext DEFAULT NULL,
   `user_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `idx_sync_at` (`at`)
+  KEY `idx_sync_at` (`at`),
+  KEY `idx_sync_user` (`user_id`),
+  CONSTRAINT `fk_sync_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;

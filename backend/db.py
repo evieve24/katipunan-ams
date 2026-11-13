@@ -124,7 +124,9 @@ CREATE TABLE IF NOT EXISTS app_state (
     `key` VARCHAR(120) NOT NULL PRIMARY KEY,
     `value` LONGTEXT NOT NULL,
     updated_at VARCHAR(40) NOT NULL,
-    updated_by INT
+    updated_by INT,
+    INDEX idx_app_state_updated_by (updated_by),
+    CONSTRAINT fk_app_state_updated_by FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 ;
 
@@ -136,7 +138,9 @@ CREATE TABLE IF NOT EXISTS audit (
     action VARCHAR(80) NOT NULL,
     detail TEXT,
     ip VARCHAR(64),
-    INDEX idx_audit_at (at)
+    INDEX idx_audit_at (at),
+    INDEX idx_audit_user (user_id),
+    CONSTRAINT fk_audit_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 ;
 
@@ -148,7 +152,9 @@ CREATE TABLE IF NOT EXISTS sync_events (
     asset_id VARCHAR(120),
     payload LONGTEXT,
     user_id INT,
-    INDEX idx_sync_at (at)
+    INDEX idx_sync_at (at),
+    INDEX idx_sync_user (user_id),
+    CONSTRAINT fk_sync_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 ;
 
@@ -169,7 +175,13 @@ CREATE TABLE IF NOT EXISTS notifications (
     read_at VARCHAR(40),
     read_by INT,
     INDEX idx_notifications_recipient (recipient_user_id, read_at),
-    INDEX idx_notifications_created (created_at)
+    INDEX idx_notifications_created (created_at),
+    INDEX idx_notifications_actor (actor_user_id),
+    INDEX idx_notifications_read_by (read_by),
+    INDEX idx_notifications_asset (asset_id),
+    CONSTRAINT fk_notifications_recipient FOREIGN KEY (recipient_user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_notifications_actor FOREIGN KEY (actor_user_id) REFERENCES users(id) ON DELETE SET NULL,
+    CONSTRAINT fk_notifications_read_by FOREIGN KEY (read_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 ;
 
@@ -394,6 +406,103 @@ def get_state(con: Database) -> dict[str, str]:
     }
 
 
+def ensure_foreign_keys(con: Database) -> None:
+    """Repair orphan references and add the operational-table foreign keys.
+
+    Existing installations were created before these relationships were added,
+    so CREATE TABLE IF NOT EXISTS alone cannot add them.
+    """
+    constraints = [
+        (
+            "app_state",
+            "fk_app_state_updated_by",
+            "FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL",
+        ),
+        (
+            "audit",
+            "fk_audit_user",
+            "FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL",
+        ),
+        (
+            "sync_events",
+            "fk_sync_user",
+            "FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL",
+        ),
+        (
+            "notifications",
+            "fk_notifications_recipient",
+            "FOREIGN KEY (`recipient_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE",
+        ),
+        (
+            "notifications",
+            "fk_notifications_actor",
+            "FOREIGN KEY (`actor_user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL",
+        ),
+        (
+            "notifications",
+            "fk_notifications_read_by",
+            "FOREIGN KEY (`read_by`) REFERENCES `users` (`id`) ON DELETE SET NULL",
+        ),
+        (
+            "notifications",
+            "fk_notifications_asset",
+            "FOREIGN KEY (`asset_id`) REFERENCES `assets` (`asset_id`) ON DELETE SET NULL",
+        ),
+    ]
+    existing = {
+        row["constraint_name"]
+        for row in con.execute(
+            "SELECT constraint_name FROM information_schema.table_constraints"
+            " WHERE constraint_schema = %s AND constraint_type = 'FOREIGN KEY'",
+            (DB_NAME,),
+        ).fetchall()
+    }
+    missing = [item for item in constraints if item[1] not in existing]
+    if not missing:
+        return
+
+    # Remove references that would prevent the constraints from being added.
+    con.execute(
+        "UPDATE app_state a LEFT JOIN users u ON u.id = a.updated_by"
+        " SET a.updated_by = NULL"
+        " WHERE a.updated_by IS NOT NULL AND u.id IS NULL"
+    )
+    con.execute(
+        "UPDATE audit a LEFT JOIN users u ON u.id = a.user_id"
+        " SET a.user_id = NULL"
+        " WHERE a.user_id IS NOT NULL AND u.id IS NULL"
+    )
+    con.execute(
+        "UPDATE sync_events e LEFT JOIN users u ON u.id = e.user_id"
+        " SET e.user_id = NULL"
+        " WHERE e.user_id IS NOT NULL AND u.id IS NULL"
+    )
+    con.execute(
+        "DELETE n FROM notifications n LEFT JOIN users u ON u.id = n.recipient_user_id"
+        " WHERE u.id IS NULL"
+    )
+    con.execute(
+        "UPDATE notifications n LEFT JOIN users u ON u.id = n.actor_user_id"
+        " SET n.actor_user_id = NULL"
+        " WHERE n.actor_user_id IS NOT NULL AND u.id IS NULL"
+    )
+    con.execute(
+        "UPDATE notifications n LEFT JOIN users u ON u.id = n.read_by"
+        " SET n.read_by = NULL"
+        " WHERE n.read_by IS NOT NULL AND u.id IS NULL"
+    )
+    con.execute(
+        "UPDATE notifications n LEFT JOIN assets a ON a.asset_id = n.asset_id"
+        " SET n.asset_id = NULL"
+        " WHERE n.asset_id IS NOT NULL AND n.asset_id <> '' AND a.asset_id IS NULL"
+    )
+    for table, name, clause in missing:
+        try:
+            con.execute(f"ALTER TABLE `{table}` ADD CONSTRAINT `{name}` {clause}")
+        except Exception as exc:  # keep startup working on legacy data
+            print(f"  [schema] Could not add {name}: {exc}")
+
+
 def init_db() -> None:
     # Imported lazily to avoid a db <-> erd import cycle.
     from erd import sync_erd
@@ -403,6 +512,7 @@ def init_db() -> None:
     con = connect()
     try:
         con.executescript(SCHEMA)
+        ensure_foreign_keys(con)
         existing = con.execute("SELECT COUNT(*) AS n FROM users").fetchone()["n"]
         if existing == 0:
             for username, password, name, role, office in SEED_USERS:
