@@ -982,14 +982,30 @@ function qrCameraCandidates(selectId){
   const list=[];
   const seen=new Set();
   const add=(cfg,key)=>{if(cfg&&!seen.has(key)){seen.add(key);list.push(cfg);}};
-  const selected=((document.getElementById(selectId)||{}).value)||localStorage.getItem('mets_camera_id')||'';
+  // Only honour a camera picked in the scanner's own dropdown. The mobile
+  // scanner has no dropdown, so a previously saved front-camera choice must
+  // not override its rear-camera preference.
+  const selected=selectId?(((document.getElementById(selectId)||{}).value)||''):'';
   if(selected)add({deviceId:{exact:selected}},'id:'+selected);
   const mobile=/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent||'');
-  if(mobile)add({facingMode:{ideal:'environment'}},'env');
-  (window._availableCameras||[]).forEach(cam=>{
+  if(mobile){
+    // Force the rear camera first. "ideal" is kept as a fallback for devices
+    // that reject an exact facing-mode constraint.
+    add({facingMode:{exact:'environment'}},'env-exact');
+    add({facingMode:{ideal:'environment'}},'env');
+  }else{
+    add({facingMode:{ideal:'environment'}},'env');
+  }
+  const cameras=window._availableCameras||[];
+  // Prefer cameras whose label clearly identifies the back/rear lens.
+  cameras.forEach(cam=>{
+    if(cam&&cam.id&&cam.id!==selected&&/back|rear|environment|world|wide/i.test(String(cam.label||''))){
+      add({deviceId:{exact:cam.id}},'id:'+cam.id);
+    }
+  });
+  cameras.forEach(cam=>{
     if(cam&&cam.id&&cam.id!==selected)add({deviceId:{exact:cam.id}},'id:'+cam.id);
   });
-  if(!mobile)add({facingMode:{ideal:'environment'}},'env');
   add({facingMode:{ideal:'user'}},'user');
   add({facingMode:'environment'},'env2');
   add({facingMode:'user'},'user2');

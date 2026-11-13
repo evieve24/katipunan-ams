@@ -270,7 +270,9 @@ Default Project/
 - The layout is responsive from phone to desktop: an off-canvas sidebar with a
   hamburger button, stacked statistics/settings grids, horizontally scrollable
   tables, full-screen mobile scanner, and 94vw modals.
-- Phones and tablets prefer the rear camera (`facingMode: environment`); laptops
+- Phones and tablets force the rear camera first (`facingMode: exact
+  environment`), then fall back to an ideal rear camera, a rear-labelled device,
+  and finally the front camera only when no rear camera is available. Laptops
   and desktops use the available webcam/USB camera.
 - After a scan, the result screen shows the **registered location** and
   **registered coordinates**, the **actual scanned coordinates**, GPS accuracy,
