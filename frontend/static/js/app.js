@@ -3065,7 +3065,6 @@ function saveAddEquipment(){
     const s=list.find(x=>x.id===addEqTargetStaffId);
     if(s){s.equipment=s.equipment||[];s.equipment.push(newEq);break;}
   }
-  if(typeof persistAssets==='function')persistAssets();
   document.getElementById('addEquipmentModal').classList.remove('open');
   logAction(`Added equipment ${id} (${name})`);
   showSyncToast(`✅ Equipment ${name} added`);
@@ -3190,7 +3189,6 @@ function saveEditEquipment(){
             const regAt=document.getElementById('editEqRegAt').value;
             if(regAt)eq.regAt=regAt;
           }
-          if(typeof persistAssets==='function')persistAssets();
           document.getElementById('editEquipmentModal').classList.remove('open');
           logAction(`Edited equipment ${origId} (${eq.name})`);
           showSyncToast(`✏️ ${eq.name} updated`);

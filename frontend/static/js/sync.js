@@ -19,7 +19,6 @@ function syncPushHistory(h){const a=syncHistory();a.unshift(h);localStorage.setI
   }catch(e){console.warn('Local asset restore failed',e);}
 })();
 function persistAssets(){
-  if(window.__KAT_REMOTE_HYDRATE__)return;
   try{const j=JSON.stringify(staffData);if(j!==_lastSnap){localStorage.setItem(SYNC_STORE,j);_lastSnap=j;}}
   catch(e){console.warn('Local save failed (storage full?)',e);}
 }
@@ -678,99 +677,4 @@ window.resetPasswordCredentials=function(){
     e.textContent='';
     return rp.apply(this,arguments);
   };
-
-  /* ── Cross-user state refresh ─────────────────────────────────────────
-     Other users' equipment additions/updates are written to the server by
-     bootstrap.js. Poll a tiny version endpoint and reload once the latest
-     state is safely hydrated into localStorage. Forms and open modals defer
-     the refresh so in-progress input is not lost. */
-  (function stateRefresh(){
-    function token(){
-      try{return localStorage.getItem('kat_token')||'';}catch(e){return '';}
-    }
-    if(!token())return;
-    var last=window.__KAT_STATE_VERSION__||'';
-    var timer=null, checking=false, deferred=false, deferredToast=false;
-
-    function busy(){
-      if(document.querySelector('.modal-overlay.open'))return true;
-      var ae=document.activeElement;
-      if(ae&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)&&!ae.readOnly&&!ae.disabled)return true;
-      return false;
-    }
-
-    async function hydrateAndReload(version){
-      checking=true;
-      try{
-        var res=await fetch('/api/state',{headers:{Authorization:'Bearer '+token()},cache:'no-store'});
-        if(!res.ok)return;
-        var data=await res.json();
-        var state=(data&&data.state)||{};
-        window.__KAT_REMOTE_HYDRATE__=true;
-        try{
-          Object.keys(state).forEach(function(key){
-            if(key.indexOf('mets_')===0&&typeof state[key]==='string')localStorage.setItem(key,state[key]);
-          });
-        }finally{
-          window.__KAT_REMOTE_HYDRATE__=false;
-        }
-        window.__KAT_STATE_VERSION__=(data&&(data.version||data.updated_at))||version||'';
-        deferred=false;
-        deferredToast=false;
-        location.reload();
-      }catch(e){
-        /* Retry on the next poll. */
-      }finally{
-        checking=false;
-      }
-    }
-
-    async function check(){
-      if(checking||!token()||!navigator.onLine)return;
-      try{
-        var res=await fetch('/api/state/version',{headers:{Authorization:'Bearer '+token()},cache:'no-store'});
-        if(!res.ok)return;
-        var data=await res.json();
-        var version=(data&&(data.version||data.updated_at))||'';
-        if(!last){
-          if(!version){last=version;return;}
-          if(busy()){
-            deferred=true;
-            if(!deferredToast){
-              deferredToast=true;
-              if(typeof showSyncToast==='function')showSyncToast('🔄 New equipment updates are available — finish your entry to refresh');
-            }
-            return;
-          }
-          await hydrateAndReload(version);
-          return;
-        }
-        if(!version||version===last)return;
-        if(busy()){
-          deferred=true;
-          if(!deferredToast){
-            deferredToast=true;
-            if(typeof showSyncToast==='function')showSyncToast('🔄 New equipment updates are available — finish your entry to refresh');
-          }
-          return;
-        }
-        deferred=false;
-        deferredToast=false;
-        await hydrateAndReload(version);
-      }catch(e){
-        /* Offline or temporary server failure; retry later. */
-      }
-    }
-
-    function start(){
-      if(timer)clearInterval(timer);
-      timer=setInterval(check,5000);
-      setTimeout(check,1500);
-    }
-    window.addEventListener('online',function(){setTimeout(check,500);});
-    document.addEventListener('visibilitychange',function(){if(!document.hidden)check();});
-    document.addEventListener('click',function(){if(deferred&&!busy())check();},true);
-    window.KatStateSync={check:check,hydrateAndReload:hydrateAndReload};
-    start();
-  })();
 })();

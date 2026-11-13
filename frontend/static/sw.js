@@ -7,7 +7,7 @@
    - Same-origin assets are cache-first with a background refresh.
    - Remaining CDN assets (fonts, icons, Chart.js) use stale-while-revalidate.
 */
-const VERSION = 'katipunan-ams-v74.65';
+const VERSION = 'katipunan-ams-v74.62';
 const SHELL_CACHE = `${VERSION}-shell`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 

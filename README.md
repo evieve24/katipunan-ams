@@ -202,12 +202,6 @@ Default Project/
   read-only and duplicate IDs are rejected.
 - On sign-in the browser **hydrates** from the server; after that every change
   is written through to the server (debounced auto-save).
-- Equipment additions and updates are persisted immediately and written through
-  to MariaDB. Every signed-in client checks a lightweight state-version hash
-  every few seconds; when another user changes the state, the client hydrates
-  the latest snapshot and refreshes automatically. Open forms and modals defer
-  the refresh so in-progress input is not lost.
-- Office Head views remain restricted to their own office after each refresh.
 - Device-only secrets (`mets_pin`, `mets_password`, `mets_username`,
   `mets_lock_type`, `mets_cred_overrides`, and the sync queue) never leave the
   device and are never stored on the server.
@@ -537,8 +531,7 @@ require `Authorization: Bearer <token>`.
 | GET | `/api/config` | Public configuration (Google client ID) |
 | POST | `/api/config` | Save the Google OAuth client ID (GSO-OIC) |
 | POST | `/api/auth/password` | Change own password |
-| GET | `/api/state/version` | Lightweight content-hash version for cross-user equipment refresh |
-| GET | `/api/state` | Full application state (`version`, `updated_at`) |
+| GET | `/api/state` | Full application state |
 | PUT | `/api/state` | Save state keys (`{"updates":{...}}`) |
 | POST | `/api/state/reset` | Wipe state (GSO-OIC, `{"confirm":"RESET"}`) |
 | GET | `/api/assets` | Flattened asset list (`q`, `status`, `dept`, `limit`, `offset`) |
