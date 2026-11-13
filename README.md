@@ -265,8 +265,10 @@ Default Project/
 - The **desktop QR modal** provides a camera selector, **Start**, **Stop**, and
   **Scan Again**.
 - The scanner is tuned for speed: QR-only decoding, native
-  `BarcodeDetector` when the browser supports it, 30 FPS, and an adaptive scan
-  box (65% of the viewfinder).
+  `BarcodeDetector` when the browser supports it, 60 FPS, no mirrored-frame
+  pass on the rear camera, and an adaptive scan box (80% of the viewfinder).
+  The mobile viewfinder is taller and its scan border is larger for easier
+  aiming.
 - The layout is responsive from phone to desktop: an off-canvas sidebar with a
   hamburger button, stacked statistics/settings grids, horizontally scrollable
   tables, full-screen mobile scanner, and 94vw modals.

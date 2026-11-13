@@ -1224,7 +1224,7 @@ mark{background:#fff3cd;color:var(--navy);border-radius:2px;padding:0 2px;}
   border:.5px solid rgba(201,168,76,.3);border-radius:12px;
   overflow:hidden;position:relative;cursor:pointer;
   display:flex;align-items:center;justify-content:center;
-  height:190px;
+  height:260px;
   transition:border-color .2s,box-shadow .2s;
 }
 .scanner-card-box:hover{border-color:rgba(201,168,76,.55);}
@@ -1288,7 +1288,7 @@ mark{background:#fff3cd;color:var(--navy);border-radius:2px;padding:0 2px;}
 .scanner-card-box.live .scanner-tap-hint{display:none;}
 .scanner-card-box.live .scanner-bg-lines{opacity:.15;}
 .scanner-card-box.live .scanner-vignette{
-  background:radial-gradient(ellipse 72% 72% at 50% 50%,transparent 48%,rgba(5,12,26,.55) 100%);
+  background:radial-gradient(ellipse 84% 84% at 50% 50%,transparent 56%,rgba(5,12,26,.55) 100%);
 }
 .ms-inline-reader video{width:100%!important;height:100%!important;object-fit:cover!important;display:block;}
 .ms-inline-reader canvas{display:none!important;}
@@ -1899,7 +1899,7 @@ body:not(.role-oic) .action-btn.delete,body:not(.role-oic) .staff-card .action-b
 .scanner-card-box.live .scan-frame{
   display:block!important;
   position:absolute;left:50%;top:50%;
-  width:min(64%,230px);height:min(58%,170px);
+  width:min(82%,300px);height:min(74%,230px);
   transform:translate(-50%,-50%);
   border:0;
   border-radius:10px;

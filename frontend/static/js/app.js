@@ -1011,6 +1011,27 @@ function qrCameraCandidates(selectId){
   add({facingMode:'user'},'user2');
   return list;
 }
+function isFrontCameraCandidate(cfg){
+  if(!cfg)return false;
+  const fm=cfg.facingMode;
+  if(fm==='user'||(fm&&(fm.ideal==='user'||fm.exact==='user')))return true;
+  const id=cfg.deviceId&&(cfg.deviceId.exact||cfg.deviceId);
+  if(id){
+    const cam=(window._availableCameras||[]).find(c=>c.id===id);
+    if(cam&&/front|user|selfie/i.test(String(cam.label||'')))return true;
+  }
+  return false;
+}
+function qrScanOptions(cfg,mobile){
+  return {
+    fps:60,
+    qrbox:(w,h)=>{const s=Math.max(mobile?170:200,Math.floor(Math.min(w,h)*0.8));return{width:s,height:s};},
+    aspectRatio:1.0,
+    // Skipping the mirrored-frame pass is a large speed win on the rear
+    // camera. Keep it enabled for a front-camera fallback.
+    disableFlip:!isFrontCameraCandidate(cfg)
+  };
+}
 function openQRScanner(target){
   window._qrScanTarget=target||'modal';
   document.getElementById('qrScannerModal').classList.add('open');
@@ -1051,7 +1072,7 @@ async function startModalScanner(){
     try{
       await scanner.start(
         cfg,
-        {fps:30,qrbox:(w,h)=>{const s=Math.max(160,Math.floor(Math.min(w,h)*0.65));return{width:s,height:s};},aspectRatio:1.0,disableFlip:false},
+        qrScanOptions(cfg,false),
         onQRScanSuccess,
         ()=>{}
       );
@@ -5004,7 +5025,7 @@ async function startMobileQRScan(deviceId) {
     try {
       await scanner.start(
         cfg,
-        { fps: 30, qrbox: (w, h) => { const s = Math.max(130, Math.floor(Math.min(w, h) * 0.65)); return { width: s, height: s }; }, aspectRatio: 1.0, disableFlip: false },
+        qrScanOptions(cfg,true),
         (text) => {
           if (msInlineScanBusy) return;
           msInlineScanBusy = true;
