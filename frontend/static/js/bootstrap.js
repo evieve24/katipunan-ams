@@ -6,7 +6,10 @@
   var TOKEN_KEY = 'kat_token', USER_KEY = 'kat_user';
   var SENSITIVE = {
     mets_pin: 1, mets_password: 1, mets_username: 1, mets_lock_type: 1,
-    mets_pending_sync: 1, mets_device_id: 1, mets_cred_overrides: 1, mets_accounts: 1
+    mets_pending_sync: 1, mets_device_id: 1, mets_cred_overrides: 1, mets_accounts: 1,
+    mets_admin_name: 1, mets_admin_user: 1, mets_admin_dept: 1,
+    mets_theme: 1, mets_camera_id: 1, mets_sidebar_collapsed: 1,
+    mets_last_backup_drive: 1, mets_sync_history: 1
   };
   var token = '';
   try { token = localStorage.getItem(TOKEN_KEY) || ''; } catch (e) {}

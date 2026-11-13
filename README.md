@@ -202,9 +202,11 @@ Default Project/
   read-only and duplicate IDs are rejected.
 - On sign-in the browser **hydrates** from the server; after that every change
   is written through to the server (debounced auto-save).
-- Device-only secrets (`mets_pin`, `mets_password`, `mets_username`,
-  `mets_lock_type`, `mets_cred_overrides`, and the sync queue) never leave the
-  device and are never stored on the server.
+- Device-only values (`mets_pin`, `mets_password`, `mets_username`,
+  `mets_lock_type`, `mets_cred_overrides`, the sync queue, the signed-in
+  display name/user/department, theme, camera choice, sidebar state, and local
+  sync/backup history) never leave the device and are never stored on the
+  server.
 - Passwords are hashed with PBKDF2-SHA256 (260,000 iterations). Sessions use
   random bearer tokens valid for 12 hours.
 

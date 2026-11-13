@@ -103,6 +103,14 @@ SENSITIVE_KEYS = {
     "mets_device_id",
     "mets_cred_overrides",
     "mets_accounts",
+    "mets_admin_name",
+    "mets_admin_user",
+    "mets_admin_dept",
+    "mets_theme",
+    "mets_camera_id",
+    "mets_sidebar_collapsed",
+    "mets_last_backup_drive",
+    "mets_sync_history",
 }
 
 ERD_STATE_KEYS = {
