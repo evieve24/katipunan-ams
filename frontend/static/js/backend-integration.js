@@ -185,6 +185,10 @@
     }
     acc.name = user.name;
     acc.perm = user.role;
+    // The server is authoritative for an Office Head's office. This prevents
+    // a stale/demo local account with the same display name from widening the
+    // equipment list beyond the head's own office.
+    acc.office = user.office || acc.office;
     isGSOLoggedIn = true;
     currentGSOUser = acc;
   } catch (e) {

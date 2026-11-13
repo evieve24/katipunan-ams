@@ -5146,9 +5146,14 @@ document.addEventListener('DOMContentLoaded',()=>{
   setInterval(updateStatusTime,60000);
   initGeolocation();
 
-  // Restore session
+  // Restore session. Prefer the exact username: display names can collide
+  // between the built-in demo accounts and server accounts.
   const stored=localStorage.getItem('mets_admin_name');
-  if(stored){const m=GSO_CREDS.find(c=>c.name===stored);if(m){isGSOLoggedIn=true;currentGSOUser=m;updateDDLoginState();setText('loggedInUser',m.name);}}
+  const storedUser=localStorage.getItem('mets_admin_user');
+  if(stored||storedUser){
+    const m=(storedUser&&GSO_CREDS.find(c=>c.un===storedUser))||(stored&&GSO_CREDS.find(c=>c.name===stored));
+    if(m){isGSOLoggedIn=true;currentGSOUser=m;updateDDLoginState();setText('loggedInUser',m.name);}
+  }
 
   // Badge init
   setText('pendingBadge', ALL_ASSETS.filter(a=>!a.scanned).length);
