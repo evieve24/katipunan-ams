@@ -294,6 +294,8 @@ class Handler(BaseHTTPRequestHandler):
             self._api_logout(user)
         elif path == "/api/auth/password" and method == "POST":
             self._api_change_password(user)
+        elif path == "/api/state/version" and method == "GET":
+            self._api_state_version(user)
         elif path == "/api/state" and method == "GET":
             self._api_state_get(user)
         elif path == "/api/state" and method in ("PUT", "POST"):
@@ -645,6 +647,38 @@ class Handler(BaseHTTPRequestHandler):
 
     # ----- state endpoints ------------------------------------------------
 
+    @staticmethod
+    def _state_version(con) -> tuple[str, str | None, int]:
+        """Return a content hash that changes on every state add/update/delete."""
+        con.execute("SET SESSION group_concat_max_len = 1000000")
+        row = con.execute(
+            "SELECT SHA2(GROUP_CONCAT("
+            "CONCAT(`key`, ':', updated_at, ':', MD5(`value`))"
+            " ORDER BY `key` SEPARATOR '|'), 256) AS version,"
+            " MAX(updated_at) AS updated_at, COUNT(*) AS n FROM app_state"
+        ).fetchone()
+        return (
+            (row["version"] or "empty") if row else "empty",
+            (row["updated_at"] if row else None),
+            int((row["n"] or 0) if row else 0),
+        )
+
+    def _api_state_version(self, user) -> None:
+        con = connect()
+        try:
+            version, updated, _count = self._state_version(con)
+            self._json(
+                200,
+                {
+                    "ok": True,
+                    "version": version,
+                    "updated_at": updated,
+                    "serverTime": iso_now(),
+                },
+            )
+        finally:
+            con.close()
+
     def _api_state_get(self, user) -> None:
         con = connect()
         try:
@@ -652,12 +686,13 @@ class Handler(BaseHTTPRequestHandler):
                 "SELECT `key`, `value`, updated_at FROM app_state ORDER BY `key`"
             ).fetchall()
             state = {row["key"]: row["value"] for row in rows}
-            updated = max((row["updated_at"] for row in rows), default=None)
+            version, updated, _count = self._state_version(con)
             self._json(
                 200,
                 {
                     "ok": True,
                     "state": state,
+                    "version": version,
                     "updated_at": updated,
                     "user": public_user(user),
                     "serverTime": iso_now(),
@@ -726,6 +761,7 @@ class Handler(BaseHTTPRequestHandler):
                 f"keys={','.join(sorted(cleaned))}; bytes={total}",
                 self._client_ip(),
             )
+            version, state_updated, _count = self._state_version(con)
             con.commit()
             publish_notifications(notify_entries)
             self._json(
@@ -733,7 +769,8 @@ class Handler(BaseHTTPRequestHandler):
                 {
                     "ok": True,
                     "saved": len(cleaned),
-                    "updated_at": now,
+                    "version": version,
+                    "updated_at": state_updated or now,
                     "serverTime": now,
                 },
             )

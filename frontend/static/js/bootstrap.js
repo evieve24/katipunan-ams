@@ -29,7 +29,7 @@
   }
 
   // ── Pull the authoritative state from the server before the app boots ──
-  var state = null, user = null, reachable = false;
+  var state = null, user = null, reachable = false, stateVersion = '';
   try {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', '/api/state', false);
@@ -44,6 +44,7 @@
       var payload = JSON.parse(xhr.responseText || '{}');
       state = (payload && payload.state) || {};
       user = (payload && payload.user) || null;
+      stateVersion = (payload && (payload.version || payload.updated_at)) || '';
       reachable = true;
     }
   } catch (e) {
@@ -58,6 +59,7 @@
   window.__KAT_USER__ = user;
   window.__KAT_TOKEN__ = token;
   window.__KAT_ONLINE__ = reachable;
+  window.__KAT_STATE_VERSION__ = reachable ? stateVersion : '';
 
   function isSyncedKey(key) {
     return typeof key === 'string' && key.indexOf('mets_') === 0 && !SENSITIVE[key];
@@ -118,9 +120,15 @@
       if (response.status === 401 || response.status === 403) {
         try { localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(USER_KEY); } catch (e) {}
         fire('offline', 'Cloud: session expired — please sign in');
-        return;
+        return null;
       }
       if (!response.ok) throw new Error('HTTP ' + response.status);
+      return response.json().catch(function () { return {}; });
+    }).then(function (data) {
+      if (data === null) return;
+      if (data && (data.version || data.updated_at)) {
+        window.__KAT_STATE_VERSION__ = data.version || data.updated_at;
+      }
       retryDelay = 0;
       fire('saved', 'Cloud: saved');
     }).catch(function (err) {
@@ -139,7 +147,7 @@
   Storage.prototype.setItem = function (key, value) {
     nativeSet.call(this, key, value);
     try {
-      if (this === window.localStorage && isSyncedKey(key)) {
+      if (this === window.localStorage && isSyncedKey(key) && !window.__KAT_REMOTE_HYDRATE__) {
         pending[key] = String(value);
         fire('saving', 'Cloud: saving…');
         schedule();
