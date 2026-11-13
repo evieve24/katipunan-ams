@@ -1,5 +1,7 @@
 # ERD — Katipunan Asset Management System
 
+> Consolidated DFD, ERD, and class diagrams: [`SYSTEM_DIAGRAMS.md`](SYSTEM_DIAGRAMS.md).
+
 This document records the ERD implemented in MariaDB (XAMPP), the physical
 table names, and how each entity maps to the v71 application.
 

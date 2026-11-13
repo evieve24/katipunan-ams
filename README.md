@@ -119,6 +119,7 @@ Default Project/
 ├── media/
 │   └── uploads/             # Reserved for uploaded files
 ├── docs/
+│   ├── SYSTEM_DIAGRAMS.md  # Consolidated DFD, ERD, and class diagrams
 │   ├── ERD.md               # Applied ERD, table map, and Mermaid diagram
 │   ├── DFD_MAPPING.md       # Implemented DFD, D1-D14 stores, processes, and table mapping
 │   ├── DFD_DIAGRAM.md       # Visual updated DFD (core + final-system extensions)

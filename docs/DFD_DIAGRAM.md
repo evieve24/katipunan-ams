@@ -1,5 +1,7 @@
 # Katipunan AMS — Updated Data Flow Diagram
 
+> Consolidated DFD, ERD, and class diagrams: [`SYSTEM_DIAGRAMS.md`](SYSTEM_DIAGRAMS.md).
+
 This is the implemented DFD: the original core stores **D1–D11** plus the
 final-system additions **D12 Scan & Location**, **D13 Notifications**, and
 **D14 Sync**. The numbered processes follow the original diagram; Processes
