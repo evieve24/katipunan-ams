@@ -355,6 +355,18 @@ body{
 
 /* ── MAIN ── */
 #main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);transition:background 0.3s;position:relative;}
+.app-footer{
+  flex-shrink:0;padding:8px 16px;text-align:center;
+  font-size:0.68rem;font-weight:600;line-height:1.4;letter-spacing:.04em;
+  color:var(--text-mid);background:var(--topbar-bg);
+  border-top:1px solid var(--topbar-border);transition:background .3s,color .3s;
+}
+@media(max-width:600px){
+  .app-footer{font-size:.64rem;padding:7px 10px;}
+}
+@media print{
+  .app-footer{display:none!important;}
+}
 .topbar{
   background:var(--topbar-bg);border-bottom:1px solid var(--topbar-border);
   padding:12px 24px;display:flex;align-items:center;justify-content:space-between;
