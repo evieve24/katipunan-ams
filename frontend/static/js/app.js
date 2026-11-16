@@ -1027,9 +1027,10 @@ function qrScanOptions(cfg,mobile){
     fps:60,
     qrbox:(w,h)=>{const s=Math.max(mobile?170:200,Math.floor(Math.min(w,h)*0.8));return{width:s,height:s};},
     aspectRatio:1.0,
-    // Skipping the mirrored-frame pass is a large speed win on the rear
-    // camera. Keep it enabled for a front-camera fallback.
-    disableFlip:!isFrontCameraCandidate(cfg)
+    // The mobile viewfinder keeps mirrored-frame decoding enabled so a phone
+    // that mirrors its preview still decodes on the first attempt. The modal
+    // can skip the mirrored pass for extra speed on a known rear camera.
+    disableFlip:mobile?false:!isFrontCameraCandidate(cfg)
   };
 }
 function openQRScanner(target){
@@ -4368,10 +4369,9 @@ function confirmOfficePicker() {
     document.querySelectorAll('#officeDD .office-opt').forEach(o => o.classList.remove('sel'));
     setText('detectedOffice', chosenOffice);
     setText('detectedGeo', currentGeo);
-    const scanDetected = document.getElementById('scanDetected');
-    if (scanDetected) scanDetected.style.display = 'block';
-    const btn = document.getElementById('viewAssetBtn');
-    if (btn) { btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; }
+    // Do not fake a detection when the office name is not in the hidden
+    // compatibility list; just keep the scanner clean and ready.
+    resetMobileScanUI();
   }
 }
 
@@ -4886,6 +4886,9 @@ let msInlineScanner = null;
 let msInlineScanBusy = false;
 let msFrameSyncTimer = null;
 let msAutoStartTimer = null;
+let msDetectedResetTimer = null;
+let lastDecodedText = '';
+let lastDecodedAt = 0;
 
 /* Align the gold animation frame with the QR library's white scan box so the
    gold border and scan line always sit inside the white brackets. */
@@ -4975,7 +4978,19 @@ function autoStartMobileScanner(delay){
     if (banner && banner.style.display === 'block') return;
     const hint = document.getElementById('scanHintText');
     if (hint) hint.textContent = 'Starting camera…';
-    startMobileQRScan();
+    startMobileQRScan().then(function(scanner){
+      if (scanner) return;
+      const viewActive = document.getElementById('view-mobilescanner')?.classList.contains('active');
+      const stepActive = document.getElementById('step-scan')?.classList.contains('active');
+      if (!viewActive || !stepActive || msInlineScanner) return;
+      // One retry helps slow phones where the first layout/frame is not ready.
+      setTimeout(function(){
+        if (msInlineScanner) return;
+        if (!document.getElementById('view-mobilescanner')?.classList.contains('active')) return;
+        if (!document.getElementById('step-scan')?.classList.contains('active')) return;
+        startMobileQRScan();
+      }, 700);
+    });
   }, delay == null ? 150 : delay);
 }
 
@@ -4986,6 +5001,9 @@ function stopMobileQRScan() {
   }
   msInlineScanBusy = false;
   if (msAutoStartTimer) { clearTimeout(msAutoStartTimer); msAutoStartTimer = null; }
+  if (msDetectedResetTimer) { clearTimeout(msDetectedResetTimer); msDetectedResetTimer = null; }
+  lastDecodedText = '';
+  lastDecodedAt = 0;
   if (typeof clearMobileScanFrameSync === 'function') clearMobileScanFrameSync();
   const box = document.getElementById('scannerAreaBox');
   if (box) box.classList.remove('live');
@@ -5007,6 +5025,8 @@ async function startMobileQRScan(deviceId) {
     return null;
   }
   if (msInlineScanner) return msInlineScanner;
+  if (!document.getElementById('view-mobilescanner')?.classList.contains('active')) return null;
+  if (!document.getElementById('step-scan')?.classList.contains('active')) return null;
   const box = document.getElementById('scannerAreaBox');
   const reader = document.getElementById('msInlineReader');
   if (!box || !reader) return null;
@@ -5014,7 +5034,15 @@ async function startMobileQRScan(deviceId) {
   box.classList.add('live', 'ready');
   const hint = document.getElementById('scanHintText');
   if (hint) hint.textContent = 'Requesting camera…';
-  await loadCameraSelectors();
+  // Let the viewfinder finish its first layout so the camera element has
+  // real dimensions. The mobile scanner has no camera dropdown, so skip
+  // getCameras(): it adds an extra permission round-trip on first use.
+  await new Promise(resolve => {
+    let done = false;
+    const finish = () => { if (!done) { done = true; resolve(); } };
+    requestAnimationFrame(() => requestAnimationFrame(finish));
+    setTimeout(finish, 500);
+  });
   msInlineScanBusy = false;
   let lastError = null;
   for (const cfg of qrCameraCandidates('')) {
@@ -5027,10 +5055,17 @@ async function startMobileQRScan(deviceId) {
         cfg,
         qrScanOptions(cfg,true),
         (text) => {
+          const now = Date.now();
+          // Ignore the same tag while it is still in front of the camera,
+          // but keep the live scanner running for the next asset.
+          if (text === lastDecodedText && now - lastDecodedAt < 6000) return;
           if (msInlineScanBusy) return;
+          lastDecodedText = text;
+          lastDecodedAt = now;
           msInlineScanBusy = true;
-          stopMobileQRScan();
-          onQRDecoded(text);
+          Promise.resolve(onQRDecoded(text, { continuous: true })).finally(() => {
+            setTimeout(() => { msInlineScanBusy = false; }, 900);
+          });
         },
         () => {}
       );
@@ -5057,8 +5092,9 @@ async function startMobileQRScan(deviceId) {
 }
 
 /* ── QR DECODE ── */
-async function onQRDecoded(rawText) {
-  stopMobileQRScan();
+async function onQRDecoded(rawText, options) {
+  const continuous = !!(options && options.continuous);
+  if (!continuous) stopMobileQRScan();
   try {
     ms_showToast('📍 Capturing location…');
     _scanLoc = await getScanLocation();   // geolocation captured at the moment of the scan
@@ -5108,9 +5144,24 @@ async function onQRDecoded(rawText) {
     const btn = document.getElementById('viewAssetBtn');
     if (btn) { btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; }
     const box = document.getElementById('scannerAreaBox');
-    if (box) { box.classList.remove('live'); box.classList.add('detected'); }
+    if (box) {
+      if (!continuous) box.classList.remove('live');
+      box.classList.add('detected');
+    }
     const hint = document.getElementById('scanHintText');
-    if (hint) hint.textContent = 'QR detected — tap View Asset Details';
+    if (hint) hint.textContent = continuous
+      ? 'QR detected — keep scanning or tap View Asset Details'
+      : 'QR detected — tap View Asset Details';
+    if (continuous) {
+      if (msDetectedResetTimer) clearTimeout(msDetectedResetTimer);
+      msDetectedResetTimer = setTimeout(function(){
+        msDetectedResetTimer = null;
+        const b = document.getElementById('scannerAreaBox');
+        if (b) b.classList.remove('detected');
+        const h = document.getElementById('scanHintText');
+        if (h) h.textContent = 'Point the camera at the asset QR tag';
+      }, 2500);
+    }
     // Prepare the location match/mismatch indicator for the result screen.
     const assigned = scannedAsset.location || '—';
     const scannedAt = selectedOffice || assigned;
