@@ -256,16 +256,16 @@
 
     <!-- Password mode -->
     <div id="login-pw-mode" style="display:none;">
-      <div id="loginRoleBanner" style="text-align:center;margin-bottom:12px;font-size:0.78rem;color:#8899bb;">Logging in as <b id="loginRoleName" style="color:var(--gold)"></b> &nbsp;·&nbsp; <span class="forgot-link" onclick="showRoleSelect()">Change role</span></div>
+      <div id="loginRoleBanner" style="text-align:center;margin-bottom:12px;font-size:0.78rem;color:#a8b8d4;">Logging in as <b id="loginRoleName" style="color:var(--gold)"></b> &nbsp;·&nbsp; <span class="forgot-link" onclick="showRoleSelect()">Change role</span></div>
       <div class="login-label" style="margin-bottom:14px;">Enter your username and password</div>
       <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
         <input id="login-pw-username" type="text" placeholder="Username" autocomplete="username"
-          style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:9px;background:var(--bg-dark,#0d1420);color:var(--text-dark);font-size:0.85rem;font-family:inherit;box-sizing:border-box;">
+          style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:9px;background:var(--bg-dark,#0d1420);color:#f5f7fb;-webkit-text-fill-color:#f5f7fb;caret-color:#f5f7fb;font-size:0.85rem;font-family:inherit;box-sizing:border-box;">
         <!-- Password field with eye icon -->
         <div style="position:relative;">
           <input id="login-pw-password" type="password" placeholder="Password" autocomplete="current-password"
             onkeydown="if(event.key==='Enter')checkPassword()"
-            style="width:100%;padding:10px 44px 10px 14px;border:1px solid var(--border);border-radius:9px;background:var(--bg-dark,#0d1420);color:var(--text-dark);font-size:0.85rem;font-family:inherit;box-sizing:border-box;">
+            style="width:100%;padding:10px 44px 10px 14px;border:1px solid var(--border);border-radius:9px;background:var(--bg-dark,#0d1420);color:#f5f7fb;-webkit-text-fill-color:#f5f7fb;caret-color:#f5f7fb;font-size:0.85rem;font-family:inherit;box-sizing:border-box;">
           <button onclick="toggleLoginPwVisibility()" id="loginPwEyeBtn" title="Show/Hide Password"
             style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.25);border-radius:6px;cursor:pointer;padding:4px 6px;color:var(--gold-dim,#a07c2a);display:flex;align-items:center;justify-content:center;transition:background .18s,border-color .18s,color .18s;"
             onmouseover="this.style.background='rgba(201,168,76,0.2)';this.style.borderColor='var(--gold)';this.style.color='var(--gold)';"
@@ -288,9 +288,9 @@
       <span class="forgot-link" onclick="openForgotPassword()">Forgot password?</span>
     </div>
     <div style="margin-top:10px;text-align:center;">
-      <button onclick="resetPasswordCredentials()" style="background:none;border:1px solid rgba(90,112,153,0.35);border-radius:7px;padding:5px 13px;font-size:0.68rem;color:#5a7099;cursor:pointer;font-family:inherit;transition:background .18s,border-color .18s,color .18s;letter-spacing:.01em;"
-        onmouseover="this.style.background='rgba(90,112,153,0.12)';this.style.borderColor='#5a7099';this.style.color='#8899bb';"
-        onmouseout="this.style.background='none';this.style.borderColor='rgba(90,112,153,0.35)';this.style.color='#5a7099';">
+      <button onclick="resetPasswordCredentials()" style="background:none;border:1px solid rgba(143,163,199,0.45);border-radius:7px;padding:5px 13px;font-size:0.68rem;color:#8fa3c7;cursor:pointer;font-family:inherit;transition:background .18s,border-color .18s,color .18s;letter-spacing:.01em;"
+        onmouseover="this.style.background='rgba(143,163,199,0.14)';this.style.borderColor='#a8b8d4';this.style.color='#c8d5ec';"
+        onmouseout="this.style.background='none';this.style.borderColor='rgba(143,163,199,0.45)';this.style.color='#8fa3c7';">
         ⚙ Reset saved credentials
       </button>
     </div>

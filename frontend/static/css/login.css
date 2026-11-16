@@ -31,17 +31,17 @@
   .brand h1{font-family:'Playfair Display',serif;font-size:1.5rem;line-height:1.25;color:#fff;margin-top:22px;}
   .brand h1 span{color:var(--gold-light)}
   .brand .kicker{font-size:.68rem;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);margin-top:18px;}
-  .brand p{font-size:.82rem;line-height:1.65;color:var(--muted);margin-top:12px;max-width:34ch;}
-  .brand-foot{font-size:.68rem;color:#5a7099;letter-spacing:.05em;margin-top:34px;line-height:1.7}
+  .brand p{font-size:.82rem;line-height:1.65;color:#a8b8d4;margin-top:12px;max-width:34ch;}
+  .brand-foot{font-size:.68rem;color:#8fa3c7;letter-spacing:.05em;margin-top:34px;line-height:1.7}
   .brand-foot b{color:#8fa3c7;font-weight:600}
   .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:18px}
   .chip{font-size:.66rem;color:#c8d5ec;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);
     border-radius:20px;padding:4px 10px}
   .panel{padding:42px 38px;background:rgba(13,27,62,.72);display:flex;flex-direction:column;justify-content:center;}
   .panel h2{font-family:'Playfair Display',serif;font-size:1.35rem;color:#fff}
-  .panel .sub{font-size:.75rem;color:var(--muted);margin-top:5px;margin-bottom:26px;letter-spacing:.04em}
+  .panel .sub{font-size:.75rem;color:#a8b8d4;margin-top:5px;margin-bottom:26px;letter-spacing:.04em}
   label{display:block;font-size:.68rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
-    color:#93a4c4;margin-bottom:7px}
+    color:#b8c7e0;margin-bottom:7px}
   .field{position:relative;margin-bottom:16px}
   input[type=text],input[type=password]{
     width:100%;padding:13px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.14);
@@ -65,7 +65,7 @@
   .submit:hover{transform:translateY(-1px);box-shadow:0 14px 34px rgba(201,168,76,.38)}
   .submit:active{transform:translateY(0)}
   .submit:disabled{opacity:.6;cursor:wait;transform:none}
-  .meta{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:18px;font-size:.7rem;color:#6a7c9c}
+  .meta{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:18px;font-size:.7rem;color:#8fa3c7}
   .status{display:inline-flex;align-items:center;gap:6px}
   .status-dot{width:7px;height:7px;border-radius:50%;background:#8899bb}
   .status-dot.ok{background:var(--green);box-shadow:0 0 8px rgba(110,231,160,.6)}
@@ -84,12 +84,22 @@
   .demo-account:hover{border-color:var(--gold-dim);background:rgba(201,168,76,.08)}
   .demo-account b{color:#cdd8ea;font-weight:600}
   .demo-account span{color:#6a7c9c;font-family:ui-monospace,monospace;font-size:.66rem}
-  .foot{margin-top:16px;font-size:.66rem;color:#516383;line-height:1.6}
+  .foot{margin-top:16px;font-size:.66rem;color:#8fa3c7;line-height:1.6}
   @media (max-width:760px){
-    .shell{grid-template-columns:1fr}
-    .brand{padding:28px 26px;border-right:none;border-bottom:1px solid rgba(201,168,76,.18)}
+    body{padding:14px 12px;}
+    .shell{grid-template-columns:1fr;border-radius:18px;}
+    .brand{padding:24px 20px;border-right:none;border-bottom:1px solid rgba(201,168,76,.18)}
     .brand p,.brand-foot,.chips{display:none}
-    .brand h1{font-size:1.15rem;margin-top:14px}
+    .brand h1{font-size:1.15rem;margin-top:12px;line-height:1.3}
     .seal{width:52px;height:52px;font-size:1.4rem}
-    .panel{padding:28px 24px}
+    .panel{padding:24px 20px}
+    .panel h2{font-size:1.2rem}
+    .panel .sub{font-size:.78rem;line-height:1.45;margin-bottom:20px}
+    label{font-size:.72rem;line-height:1.4}
+    input[type=text],input[type=password]{font-size:16px;}
+    .submit{font-size:.9rem;padding:14px;}
+    .meta{flex-wrap:wrap;gap:6px;font-size:.72rem;line-height:1.45}
+    .demo-account{font-size:.75rem;flex-wrap:wrap;gap:4px 10px;}
+    .demo-account span{font-size:.72rem;}
+    .foot{font-size:.7rem;line-height:1.55}
   }

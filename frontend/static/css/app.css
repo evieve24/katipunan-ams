@@ -222,7 +222,35 @@
 .pin-key:active{transform:scale(0.95);}
 .pin-key.clear{color:#ff7070;font-size:0.85rem;}
 .login-error{color:#ff7070;font-size:0.78rem;min-height:20px;margin-top:4px;}
-.login-hint{font-size:0.68rem;color:#5a7099;margin-top:12px;}
+.login-hint{font-size:0.68rem;color:#8fa3c7;margin-top:12px;}
+/* Keep login text readable on the dark glass panel in every theme. */
+#loginScreen input,
+#createAccountScreen input,
+#roleSelectScreen input,
+#forgotPasswordModal input{
+  color:#f5f7fb!important;
+  -webkit-text-fill-color:#f5f7fb;
+  caret-color:#f5f7fb;
+}
+#loginScreen input::placeholder,
+#createAccountScreen input::placeholder,
+#roleSelectScreen input::placeholder,
+#forgotPasswordModal input::placeholder{
+  color:#8fa3c7!important;opacity:1;
+}
+#loginScreen input:-webkit-autofill,
+#createAccountScreen input:-webkit-autofill,
+#roleSelectScreen input:-webkit-autofill,
+#forgotPasswordModal input:-webkit-autofill{
+  -webkit-text-fill-color:#f5f7fb!important;
+  -webkit-box-shadow:0 0 0 1000px #0d1420 inset!important;
+  caret-color:#f5f7fb;
+}
+#loginScreen .login-sub,
+#createAccountScreen .login-sub,
+#roleSelectScreen .login-sub{color:#a8b8d4;}
+#loginScreen .login-label,
+#createAccountScreen .login-label{color:#b8c7e0;}
 
 /* Eye toggle button for PIN visibility */
 .pin-eye-wrap {
@@ -461,6 +489,10 @@ body{
 
 /* Profile */
 .profile-layout{display:grid;grid-template-columns:290px 1fr;gap:18px;}
+.profile-layout > *,
+.dash-grid > *,
+.pf-two > *{min-width:0;}
+.equip-table-wrap{max-width:100%;}
 .profile-card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow);}
 .profile-card-header{background:linear-gradient(135deg,var(--navy) 0%,var(--navy-mid) 100%);padding:24px 18px;text-align:center;}
 .profile-big-avatar{width:80px;height:80px;border-radius:50%;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:700;color:var(--navy);background:var(--gold);border:3px solid rgba(255,255,255,0.25);overflow:hidden;}
@@ -2016,6 +2048,8 @@ body:not(.role-oic) .action-btn.delete,body:not(.role-oic) .staff-card .action-b
 
 @media(max-width:420px){
   .stats-row{grid-template-columns:1fr;}
+  #eq-master-content .stats-row{grid-template-columns:1fr!important;}
+  #dashRecordTiles{grid-template-columns:1fr!important;}
   .topbar-right .top-gdrive-btn{display:none;}
   .notif-panel{top:56px;right:6px;left:6px;width:auto;max-width:none;max-height:82vh;}
   .settings-grid{grid-template-columns:1fr;}
@@ -2027,4 +2061,75 @@ body:not(.role-oic) .action-btn.delete,body:not(.role-oic) .staff-card .action-b
   .scanner-ctrl-btn{min-width:74px;font-size:.6rem;}
   .info-row{flex-direction:column;align-items:flex-start;}
   .info-val{text-align:left;margin-left:0;}
+}
+
+/* ── MOBILE POLISH: readable login text and single-column features ── */
+@media(max-width:600px){
+  /* Inline desktop grids must not force horizontal overflow on phones. */
+  #eq-master-content .stats-row{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+  #dashRecordTiles{grid-template-columns:1fr!important;}
+
+  #loginScreen .login-box,
+  #createAccountScreen .login-box,
+  #roleSelectScreen .login-box{
+    width:94vw!important;max-width:94vw!important;
+    max-height:92dvh;overflow-y:auto;
+    padding:24px 18px;
+  }
+  #loginScreen .login-title,
+  #createAccountScreen .login-title,
+  #roleSelectScreen .login-title{
+    font-size:1.12rem;line-height:1.3;
+  }
+  #loginScreen .login-sub,
+  #createAccountScreen .login-sub,
+  #roleSelectScreen .login-sub{
+    font-size:.74rem;line-height:1.45;margin-bottom:18px;
+  }
+  .login-label{font-size:.72rem;line-height:1.4;}
+  .login-hint{font-size:.7rem;line-height:1.45;}
+
+  /* 16px inputs prevent iOS from zooming the whole page on focus. */
+  #loginScreen input,
+  #createAccountScreen input,
+  #roleSelectScreen input,
+  #forgotPasswordModal input,
+  .modal-form-row input,
+  .modal-form-row select,
+  .settings-input,
+  .pf-toolbar input,
+  .pf-toolbar select{
+    font-size:16px!important;
+  }
+
+  .content-area{overflow-x:hidden;}
+  .section-title{font-size:1.05rem;line-height:1.3;}
+  .section-subtitle{font-size:.74rem;line-height:1.45;}
+
+  .search-results-header{flex-wrap:wrap;gap:8px;align-items:flex-start;}
+  .search-result-item{flex-wrap:wrap;align-items:flex-start;padding:10px 12px;}
+  .sr-info{flex:1 1 calc(100% - 42px);min-width:0;}
+  .sr-meta{white-space:normal;line-height:1.45;}
+
+  .reports-grid{grid-template-columns:1fr;}
+  .report-card{padding:16px;}
+
+  .pf-toolbar .f{flex:1 1 100%;}
+  .pf-toolbar input[type=search],
+  .pf-toolbar input[type=number],
+  .pf-toolbar select{width:100%;max-width:100%;}
+
+  .modal-box{max-height:90dvh;overflow-y:auto;}
+  .modal-form-grid{grid-template-columns:1fr;}
+  .qr-modal-actions .action-btn,
+  .qr-modal-actions .modal-btn{flex:1 1 auto;}
+
+  .gso-tab{font-size:.68rem;padding:5px 10px;}
+}
+
+@media(max-width:380px){
+  .stats-row{grid-template-columns:1fr;}
+  .topbar-right{justify-content:flex-start;}
+  .lp-feat-pill{font-size:.56rem;}
+  .search-result-item .sr-info{flex-basis:100%;}
 }
