@@ -356,7 +356,9 @@ body{
 /* ── MAIN ── */
 #main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);transition:background 0.3s;position:relative;}
 .app-footer{
-  flex-shrink:0;padding:8px 16px;text-align:center;
+  flex-shrink:0;padding:8px 16px;
+  display:flex;align-items:center;justify-content:center;
+  width:100%;text-align:center;
   font-size:0.68rem;font-weight:600;line-height:1.4;letter-spacing:.04em;
   color:var(--text-mid);background:var(--topbar-bg);
   border-top:1px solid var(--topbar-border);transition:background .3s,color .3s;
@@ -2029,6 +2031,11 @@ body:not(.role-oic) .action-btn.delete,body:not(.role-oic) .staff-card .action-b
   .lp-features{gap:6px;margin-bottom:26px;}
   .lp-feat-pill{font-size:.6rem;padding:4px 9px;}
   .lp-enter-btn{padding:14px 34px;font-size:.95rem;}
+  .lp-caption{
+    bottom:42px;width:calc(100% - 28px);max-width:360px;
+    white-space:normal;text-align:center;line-height:1.65;
+    font-size:.58rem;letter-spacing:.1em;
+  }
 
   #view-mobilescanner .sc-page-wrap{padding:8px;}
   #view-mobilescanner .sc-topbar{padding:8px 10px;gap:5px;}
