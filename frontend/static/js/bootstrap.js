@@ -68,20 +68,29 @@
     return typeof key === 'string' && key.indexOf('mets_') === 0 && !SENSITIVE[key];
   }
 
+  // Durable list of keys changed locally but not yet accepted by the server.
+  // Only the key names are stored; the values already live in localStorage.
+  var DIRTY_KEY = 'kat_pending_state_keys';
+  var dirty = {};
+  try { dirty = JSON.parse(localStorage.getItem(DIRTY_KEY) || '{}') || {}; } catch (e) { dirty = {}; }
+  if (typeof dirty !== 'object' || Array.isArray(dirty)) dirty = {};
+  window.__KAT_HAS_DIRTY__ = function (key) { return !!dirty[key]; };
+
   if (reachable) {
-    // The server is the source of truth: drop stale browser-only copies first.
+    // The server is the source of truth, but never overwrite a locally
+    // changed key that has not been uploaded yet.
     try {
       var drop = [];
       for (var i = 0; i < localStorage.length; i++) {
         var k = localStorage.key(i);
-        if (isSyncedKey(k)) drop.push(k);
+        if (isSyncedKey(k) && !dirty[k]) drop.push(k);
       }
       for (var j = 0; j < drop.length; j++) localStorage.removeItem(drop[j]);
     } catch (e) {}
 
     try {
       Object.keys(state).forEach(function (key) {
-        if (!isSyncedKey(key)) return;
+        if (!isSyncedKey(key) || dirty[key]) return;
         localStorage.setItem(key, state[key]);
       });
     } catch (e) { console.warn('State hydration failed', e); }
@@ -95,9 +104,20 @@
   }
 
   // ── Write-through autosave: every localStorage write goes to the server ──
-  var pending = {}, saveTimer = null, inFlight = false, retryDelay = 0;
+  // Rebuild the in-memory queue from the durable dirty keys so an offline
+  // change made before the app was closed still uploads on the next launch.
+  var pending = {};
+  Object.keys(dirty).forEach(function (key) {
+    if (!isSyncedKey(key)) return;
+    try { pending[key] = localStorage.getItem(key); } catch (e) { pending[key] = null; }
+  });
+  var saveTimer = null, inFlight = false, retryDelay = 0;
   var nativeSet = Storage.prototype.setItem;
   var nativeRemove = Storage.prototype.removeItem;
+
+  function saveDirty() {
+    try { localStorage.setItem(DIRTY_KEY, JSON.stringify(dirty)); } catch (e) {}
+  }
 
   function schedule(delay) {
     if (saveTimer) clearTimeout(saveTimer);
@@ -123,7 +143,7 @@
       if (response.status === 401 || response.status === 403) {
         try { localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(USER_KEY); } catch (e) {}
         fire('offline', 'Cloud: session expired — please sign in');
-        return;
+        throw new Error('SESSION_EXPIRED');
       }
       if (!response.ok) throw new Error('HTTP ' + response.status);
       return response.json().catch(function () { return {}; });
@@ -131,6 +151,12 @@
       if (data && (data.version || data.updated_at)) {
         window.__KAT_STATE_VERSION__ = data.version || data.updated_at;
       }
+      // Only clear the durable dirty flags for keys that were not changed
+      // again while this request was in flight.
+      keys.forEach(function (key) {
+        if (!(key in pending)) delete dirty[key];
+      });
+      saveDirty();
       retryDelay = 0;
       fire('saved', 'Cloud: saved');
     }).catch(function (err) {
@@ -150,6 +176,8 @@
     nativeSet.call(this, key, value);
     try {
       if (this === window.localStorage && isSyncedKey(key) && !window.__KAT_REMOTE_HYDRATE__) {
+        dirty[key] = true;
+        saveDirty();
         pending[key] = String(value);
         fire('saving', 'Cloud: saving…');
         schedule();
@@ -161,6 +189,8 @@
     nativeRemove.call(this, key);
     try {
       if (this === window.localStorage && isSyncedKey(key) && !window.__KAT_REMOTE_HYDRATE__) {
+        dirty[key] = true;
+        saveDirty();
         pending[key] = null;
         fire('saving', 'Cloud: saving…');
         schedule();
@@ -180,7 +210,19 @@
       xhr.setRequestHeader('Content-Type', 'application/json');
       xhr.setRequestHeader('Authorization', 'Bearer ' + token);
       xhr.send(JSON.stringify({ updates: updates }));
+      if (xhr.status >= 200 && xhr.status < 300) {
+        Object.keys(updates).forEach(function (key) {
+          if (!(key in pending)) delete dirty[key];
+        });
+        saveDirty();
+      }
     } catch (e) {}
+  });
+
+  // If the app was closed offline, retry the saved keys as soon as possible.
+  if (Object.keys(pending).length) schedule(500);
+  window.addEventListener('online', function () {
+    if (Object.keys(pending).length) flush();
   });
 
   fire(reachable ? 'saved' : 'offline', reachable ? 'Cloud: connected' : 'Cloud: offline');

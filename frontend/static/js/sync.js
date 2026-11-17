@@ -729,6 +729,9 @@ window.resetPasswordCredentials=function(){
     try{
       Object.keys(state||{}).forEach(function(key){
         if(!sharedKey(key)||typeof state[key]!=='string')return;
+        // Never let a remote refresh overwrite a local change that has not
+        // been uploaded yet (for example, data entered while offline).
+        if(window.__KAT_HAS_DIRTY__ && window.__KAT_HAS_DIRTY__(key))return;
         const value=state[key];
         if(key==='mets_staffdata'){
           if(value===beforeStaff)return;
