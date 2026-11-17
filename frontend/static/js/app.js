@@ -1524,6 +1524,10 @@ function showStaff(deptId){
   currentDeptStaff=list;
   let deptName=deptId;
   for(const[oid,odata]of Object.entries(officeData)){const f=odata.depts.find(d=>d.id===deptId);if(f){deptName=f.name;break;}}
+  if(deptName===deptId){
+    const adminDept=(window.adminOfficeDepts||[]).find(d=>d.id===deptId);
+    if(adminDept)deptName=adminDept.name;
+  }
   navStack=[{label:'Dashboard',fn:goHome},{label:deptName,fn:()=>showStaff(deptId)}];
   document.getElementById('staff-title').textContent=`👥 ${deptName}`;
   document.getElementById('staff-subtitle').textContent=`${list.length} personnel — click to view profile`;
@@ -3670,6 +3674,7 @@ function saveAddPersonnel(){
   };
   staffData[deptId]=staffData[deptId]||[];
   staffData[deptId].push(newStaff);
+  if(typeof persistAssets==='function')persistAssets();
   document.getElementById('addPersModal').classList.remove('open');
   logAction(`Added personnel: ${name} to ${deptId}`);
   showSyncToast(`✅ ${name} added`);
@@ -3703,6 +3708,7 @@ function saveEditPersonnel(){
   staff.gender=document.getElementById('editPersGender').value;
   staff.status=document.getElementById('editPersStatus').value;
   staff.initials=staff.name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+  if(typeof persistAssets==='function')persistAssets();
   document.getElementById('editPersModal').classList.remove('open');
   logAction(`Edited personnel: ${staff.name}`);
   showSyncToast(`✏️ ${staff.name} updated`);
@@ -3723,6 +3729,7 @@ function deletePersonnel(deptId,staffId){
     updateRecycleBinCount();
   }
   staffData[deptId]=list.filter(s=>s.id!==staffId);
+  if(typeof persistAssets==='function')persistAssets();
   logAction(`Deleted personnel: ${staff.name} from ${deptId}`);
   showSyncToast(`🗑 ${staff.name} deleted`);
   buildAlertsPanel();buildStatusChart();updateDashStats();
