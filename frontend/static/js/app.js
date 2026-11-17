@@ -4913,6 +4913,148 @@ function resetForNextScan() {
   autoStartMobileScanner(150);
 }
 
+/* ── ADD ASSET FROM A SCANNED QR (offline-first) ── */
+function scannerOfficeDeptId(officeName){
+  const name=String(officeName||'').trim().toLowerCase();
+  const aliases={
+    "mayor's office":'exec_asst',"mayors office":'exec_asst',
+    "budget office":'budget_prep',"accounting office":'acct_gen',
+    "engineering office":'eng_infra',"treasurer's office":'treas_col',
+    "treasurers office":'treas_col',"gso":'gso_main',"mpdc office":'mpc_plans',
+    "mswdo office":'mswd_solo',"hr office":'hr',"civil registrar":'creg_birth',
+    "rhu":'rhu_phys',"ldrrmo":'ldrrmo_prep'
+  };
+  if(aliases[name])return aliases[name];
+  for(const o of Object.values(officeData)){
+    if(String(o.name||'').toLowerCase()===name&&o.depts&&o.depts[0])return o.depts[0].id;
+    for(const d of (o.depts||[])){
+      if(String(d.name||'').toLowerCase()===name)return d.id;
+    }
+  }
+  for(const d of (window.adminOfficeDepts||[])){
+    if(String(d.name||'').toLowerCase()===name)return d.id;
+  }
+  if(Array.isArray(staffData['gso_main']))return 'gso_main';
+  return Object.keys(staffData).find(k=>Array.isArray(staffData[k]))||'gso_main';
+}
+function scannerUnassignedStaff(deptId){
+  const id='scanner_unassigned';
+  staffData[deptId]=staffData[deptId]||[];
+  let s=staffData[deptId].find(x=>x.id===id||x.name==='Unassigned (Scanner Intake)');
+  if(!s){
+    s={id,name:'Unassigned (Scanner Intake)',pos:'Unassigned',status:'Active',age:'',address:'',contact:'',gender:'',yos:'',initials:'UA',color:'#4a5568',equipment:[]};
+    staffData[deptId].push(s);
+  }
+  s.equipment=s.equipment||[];
+  return s;
+}
+function scannerOwnerOptions(){
+  const sel=document.getElementById('scanAddAssetOwner');
+  if(!sel)return;
+  const opts=['<option value="__unassigned__">Unassigned (Scanner Intake)</option>'];
+  for(const [deptId,list] of Object.entries(staffData)){
+    if(!Array.isArray(list))continue;
+    for(const s of list){
+      if(!s||!s.id||s.id==='scanner_unassigned')continue;
+      const dept=dashDeptName(deptId)||deptId.replace(/_/g,' ');
+      opts.push(`<option value="${deptId}|${s.id}">${s.name} — ${dept}</option>`);
+    }
+  }
+  sel.innerHTML=opts.join('');
+  const ownerName=String(scannedAsset.owner||'').trim().toLowerCase();
+  if(ownerName){
+    const match=[...sel.options].find(o=>o.textContent.toLowerCase().startsWith(ownerName+' —'));
+    if(match)sel.value=match.value;
+  }
+}
+function openScannerAddAssetModal(){
+  if(!scannedAsset||!scannedAsset.id){showSyncToast('Scan a QR code first');return;}
+  if(katFindAsset(scannedAsset.id).eq||allExistingAssetIds().has(scannedAsset.id.toUpperCase())){
+    showSyncToast('Asset already exists');
+    return;
+  }
+  stopMobileQRScan();
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v==null?'':v;};
+  set('scanAddAssetId',scannedAsset.id);
+  set('scanAddAssetName',scannedAsset.name&&scannedAsset.name!=='Unknown Asset'?scannedAsset.name:'');
+  set('scanAddAssetBrand',scannedAsset.brand&&scannedAsset.brand!=='—'?scannedAsset.brand:'');
+  set('scanAddAssetSerial',scannedAsset.serial&&scannedAsset.serial!=='—'?scannedAsset.serial:'');
+  set('scanAddAssetStatus',scannedAsset.status||'Serviceable');
+  set('scanAddAssetLocation',scannedAsset.location&&scannedAsset.location!=='—'?scannedAsset.location:(selectedOffice||''));
+  set('scanAddAssetAmount',scannedAsset.amount||'');
+  set('scanAddAssetAcquired',scannedAsset.acquiredDate&&scannedAsset.acquiredDate!=='—'?scannedAsset.acquiredDate:'');
+  set('scanAddAssetRemarks','');
+  scannerOwnerOptions();
+  autoSetCategory('scanAddAssetAmount','scanAddAssetCategory','scanAddAssetCategoryDisplay');
+  document.getElementById('scannerAddAssetModal').classList.add('open');
+}
+function closeScannerAddAssetModal(){
+  const modal=document.getElementById('scannerAddAssetModal');
+  if(modal)modal.classList.remove('open');
+  resetMobileScanUI();
+  if(document.getElementById('view-mobilescanner')?.classList.contains('active'))autoStartMobileScanner(200);
+}
+function saveScannedAsset(){
+  const id=(document.getElementById('scanAddAssetId')||{}).value||'';
+  const name=(document.getElementById('scanAddAssetName')||{}).value||'';
+  if(!id.trim()){alert('Item ID is missing.');return;}
+  if(!name.trim()){alert('Equipment Name is required.');return;}
+  if(allExistingAssetIds().has(id.trim().toUpperCase())){alert('Item ID already exists. Please use a different ID.');return;}
+  const ownerVal=(document.getElementById('scanAddAssetOwner')||{}).value||'__unassigned__';
+  let deptId,staff;
+  if(ownerVal==='__unassigned__'){
+    const loc=(document.getElementById('scanAddAssetLocation')||{}).value.trim()||selectedOffice||'GSO';
+    deptId=scannerOfficeDeptId(loc);
+    staff=scannerUnassignedStaff(deptId);
+  }else{
+    const parts=ownerVal.split('|');
+    deptId=parts[0];
+    staff=(staffData[deptId]||[]).find(s=>s.id===parts[1]);
+    if(!staff){
+      deptId=scannerOfficeDeptId(selectedOffice||'GSO');
+      staff=scannerUnassignedStaff(deptId);
+    }
+  }
+  const amount=(document.getElementById('scanAddAssetAmount')||{}).value.trim();
+  const amountNum=parseFloat(amount)||0;
+  const category=amountNum>=50000?'PPE':'Semi-Expendable';
+  const now=new Date().toISOString();
+  const loc=_scanLoc||null;
+  const newEq={
+    id:id.trim(),name:name.trim(),description:'',
+    regLat:(typeof currentLocation!=='undefined'&&currentLocation)?currentLocation.lat:null,
+    regLng:(typeof currentLocation!=='undefined'&&currentLocation)?currentLocation.lng:null,
+    regAcc:(typeof currentLocation!=='undefined'&&currentLocation)?currentLocation.acc:null,
+    regAt:(typeof currentLocation!=='undefined'&&currentLocation)?currentLocation.at:null,
+    brand:(document.getElementById('scanAddAssetBrand')||{}).value.trim()||'—',
+    serial:(document.getElementById('scanAddAssetSerial')||{}).value.trim()||'N/A',
+    status:(document.getElementById('scanAddAssetStatus')||{}).value||'Serviceable',
+    location:(document.getElementById('scanAddAssetLocation')||{}).value.trim()||selectedOffice||'Not Set',
+    amount:amount,category,
+    acquiredDate:(document.getElementById('scanAddAssetAcquired')||{}).value||'',
+    usefulLife:'',calibrationDate:'',expirationDate:'',
+    remarks:(document.getElementById('scanAddAssetRemarks')||{}).value.trim(),
+    lastScannedTime:now,lastScanDate:now.slice(0,10),
+    lastScanLat:loc?loc.lat:null,lastScanLng:loc?loc.lng:null,lastScanAcc:loc?loc.acc:null,
+    lastScanDemo:!!(loc&&loc.demo),
+    lastScannedLocation:loc?fmtLoc(loc):'Location not captured',
+    scanHistory:[{time:now,lat:loc?loc.lat:null,lng:loc?loc.lng:null,acc:loc?loc.acc:null,demo:!!(loc&&loc.demo),source:'qr_mobile_scan'}]
+  };
+  staff.equipment=staff.equipment||[];
+  staff.equipment.push(newEq);
+  if(typeof persistAssets==='function')persistAssets();
+  logAction(`Added asset ${newEq.id} (${newEq.name}) from mobile scanner`);
+  try{queueAssetScan(newEq.id,loc,'qr_mobile_scan',newEq);}catch(e){}
+  closeScannerAddAssetModal();
+  const box=document.getElementById('scannerAreaBox');
+  if(box)box.classList.remove('detected');
+  showSyncToast(navigator.onLine?'✅ Asset saved — syncing now':'✅ Asset saved on this phone — will sync when online');
+  try{buildAlertsPanel();buildStatusChart();updateDashStats();}catch(e){}
+  if(navigator.onLine&&window.KatScanQueue){try{window.KatScanQueue.flush();}catch(e){}}
+  goTo('step-scan');
+  autoStartMobileScanner(200);
+}
+
 /* ── CAMERA SCAN (real QR, inline viewfinder) ── */
 let msInlineScanner = null;
 let msInlineScanBusy = false;
@@ -4985,6 +5127,8 @@ function resetMobileScanUI() {
   if (banner) banner.style.display = 'none';
   const btn = document.getElementById('viewAssetBtn');
   if (btn) { btn.style.opacity = '.4'; btn.style.pointerEvents = 'none'; }
+  const addBtn = document.getElementById('addScannedAssetBtn');
+  if (addBtn) addBtn.style.display = 'none';
   const hint = document.getElementById('scanHintText');
   if (hint) { hint.textContent = 'Point camera at asset QR code tag'; hint.style.display = ''; }
   const box = document.getElementById('scannerAreaBox');
@@ -5139,6 +5283,9 @@ async function onQRDecoded(rawText, options) {
     if(!data.id&&data.assetId)data.id=data.assetId;
     const found=katFindAsset(data.id);
     const eq=found.eq;
+    const existsAnywhere=!!eq||(typeof allExistingAssetIds==='function'&&allExistingAssetIds().has(String(data.id||'').toUpperCase()));
+    const addScannedBtn=document.getElementById('addScannedAssetBtn');
+    if(addScannedBtn)addScannedBtn.style.display=existsAnywhere?'none':'flex';
     scannedAsset={
       id:data.id||(eq?eq.id:rawText),
       name:(eq&&eq.name)||data.name||'Unknown Asset',

@@ -1070,8 +1070,11 @@
         </div>
 
         <!-- ⑧ Footer button -->
-        <div class="sc-footer">
-          <button class="scan-btn" id="viewAssetBtn" onclick="viewAsset()" style="opacity:.4;pointer-events:none;margin:0;width:100%;">
+        <div class="sc-footer" style="display:flex;gap:8px;">
+          <button class="scan-btn" id="addScannedAssetBtn" onclick="openScannerAddAssetModal()" style="display:none;margin:0;flex:1;background:var(--gold);color:#0d1b3e;border-color:var(--gold);">
+            <i class="ti ti-plus"></i> Add Asset
+          </button>
+          <button class="scan-btn" id="viewAssetBtn" onclick="viewAsset()" style="opacity:.4;pointer-events:none;margin:0;flex:1;">
             <i class="ti ti-eye"></i> View Asset Details
           </button>
         </div>
@@ -1634,6 +1637,40 @@
     <div style="display:flex;gap:7px;justify-content:flex-end;margin-top:14px;">
       <button class="action-btn cancel" onclick="document.getElementById('addEquipmentModal').classList.remove('open')">✕ Cancel</button>
       <button class="action-btn add" onclick="saveAddEquipment()" style="padding:6px 16px">✅ Save Equipment</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD ASSET FROM SCANNED QR (offline-first) -->
+<div class="modal-overlay" id="scannerAddAssetModal">
+  <div class="modal-box" style="max-width:480px;text-align:left;max-height:90vh;overflow-y:auto;">
+    <button class="modal-close" onclick="closeScannerAddAssetModal()">✕</button>
+    <div class="modal-title">➕ Add Asset from Scan</div>
+    <div class="modal-sub">Saved on this phone first. It syncs automatically when internet returns.</div>
+    <div class="modal-form-grid">
+      <div class="modal-form-row"><label>Item ID</label><input id="scanAddAssetId" readonly></div>
+      <div class="modal-form-row"><label>Equipment</label><input id="scanAddAssetName" placeholder="e.g. Laptop"></div>
+      <div class="modal-form-row"><label>Brand / Model</label><input id="scanAddAssetBrand" placeholder="e.g. Dell Latitude"></div>
+      <div class="modal-form-row"><label>Serial No.</label><input id="scanAddAssetSerial" placeholder="Serial number"></div>
+      <div class="modal-form-row"><label>Status</label>
+        <select id="scanAddAssetStatus">
+          <option>Serviceable</option><option>Damaged</option><option>Unserviceable</option><option>Lost</option><option>Missing</option>
+        </select>
+      </div>
+      <div class="modal-form-row"><label>Location</label><input id="scanAddAssetLocation" placeholder="Office / room"></div>
+      <div class="modal-form-row"><label>Accountable Person</label>
+        <select id="scanAddAssetOwner"><option value="__unassigned__">Unassigned (Scanner Intake)</option></select>
+      </div>
+      <div class="modal-form-row"><label>Amount (₱)</label><input id="scanAddAssetAmount" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00" oninput="autoSetCategory('scanAddAssetAmount','scanAddAssetCategory','scanAddAssetCategoryDisplay')"></div>
+      <div class="modal-form-row"><label>Acquired Date</label><input id="scanAddAssetAcquired" type="date"></div>
+      <div class="modal-form-row"><label>Remarks</label><input id="scanAddAssetRemarks" placeholder="Optional"></div>
+    </div>
+    <input type="hidden" id="scanAddAssetCategory">
+    <div id="scanAddAssetCategoryDisplay" class="pf-sub" style="margin:2px 0 12px;">— Enter amount to auto-set —</div>
+    <div style="font-size:0.7rem;color:var(--text-light);line-height:1.45;margin-bottom:14px;">Only use this for an asset that is not yet in the system. The scanned QR details are prefilled.</div>
+    <div style="display:flex;gap:7px;justify-content:flex-end;">
+      <button class="action-btn cancel" onclick="closeScannerAddAssetModal()">✕ Cancel</button>
+      <button class="action-btn add" onclick="saveScannedAsset()" style="padding:6px 16px">✅ Save Asset</button>
     </div>
   </div>
 </div>
