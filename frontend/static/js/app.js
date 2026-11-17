@@ -930,15 +930,34 @@ async function syncNow(){
   if(!isOnline||!pendingSync.length)return;
   const bar=document.getElementById('syncStatusBar');
   const txt=document.getElementById('syncStatusText');
-  bar.className='syncing';
-  txt.textContent=`Syncing ${pendingSync.length} change(s)...`;
-  // Simulate sync (in production, POST to your backend/Firebase)
-  await new Promise(r=>setTimeout(r,1200));
-  logAction(`Synced ${pendingSync.length} record(s) to central database`);
-  pendingSync=[];
-  localStorage.setItem('mets_pending_sync','[]');
-  updateSyncBar();
-  showSyncToast(`✅ Sync complete — all records updated`);
+  const batch=pendingSync.slice();
+  const url=localStorage.getItem('mets_sync_url')||'';
+  if(!url){
+    updateSyncBar();
+    showSyncToast('⚠ Sync endpoint not ready — changes kept in queue');
+    return;
+  }
+  if(bar)bar.className='syncing';
+  if(txt)txt.textContent=`Syncing ${batch.length} change(s)...`;
+  try{
+    const res=await fetch(url,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        device:(typeof syncDeviceId==='function'?syncDeviceId():'DEV-WEB'),
+        sentAt:new Date().toISOString(),
+        changes:batch
+      })
+    });
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    pendingSync=pendingSync.filter(x=>!batch.includes(x));
+    localStorage.setItem('mets_pending_sync',JSON.stringify(pendingSync));
+    updateSyncBar();
+    showSyncToast(`✅ Sync complete — ${batch.length} change(s)`);
+  }catch(e){
+    updateSyncBar();
+    showSyncToast('⚠ Sync failed — changes kept in queue');
+  }
 }
 
 function showSyncToast(msg){
@@ -4814,7 +4833,20 @@ function saveUpdate() {
     localStorage.setItem('mets_pending_sync', JSON.stringify(pend));
   } catch(e){}
 
+  // Write the status/remarks back to the real local asset record. When online,
+  // the existing write-through autosave pushes mets_staffdata to the server;
+  // when offline, it stays queued and retries until the connection returns.
+  const found = (typeof katFindAsset === 'function') ? katFindAsset(assetId) : { eq: null };
+  const localEq = found && found.eq;
+  if (localEq) {
+    localEq.status = newStatus;
+    if (remarks) localEq.remarks = remarks;
+    localEq.lastUpdated = now.toISOString();
+    if (typeof persistAssets === 'function') persistAssets();
+  }
+
   scannedAsset.status = newStatus;
+  if (remarks) scannedAsset.remarks = remarks;
   const coords = currentGeo;
   setText('succ-id', assetId);
   const ss=document.getElementById('succ-status');
